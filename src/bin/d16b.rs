@@ -3,6 +3,7 @@ use std::{
     io::{self, BufRead},
 };
 
+#[derive(Debug, PartialEq)]
 struct ParseResult {
     valve_name: String,
     flow_rate: u32,
@@ -207,31 +208,21 @@ fn find_max_volume(
     max_volume
 }
 
-fn main() {
-    println!("Hello, world!");
-
+fn find_max_volume_for_input(input: Vec<String>) -> u32 {
     let mut parsed_lines: Vec<ParseResult> = Vec::new();
     let mut name_table: HashMap<String, usize> = HashMap::new();
 
-    let stdin = io::stdin();
-    for l in stdin.lock().lines() {
-        let line = l.unwrap();
-        if line.len() == 0 {
-            break;
-        }
-
+    for line in input {
         let res = parse_line(line.as_str()).unwrap();
         name_table.insert(res.valve_name.clone(), parsed_lines.len());
         parsed_lines.push(res);
     }
-
     let mut graph: Vec<Valve> = Vec::new();
     let mut graph_state: GraphState = GraphState {
         valve_states: Vec::new(),
         flow_left: 0,
         max_volume_so_far: 0,
     };
-
     for r in parsed_lines {
         graph.push(Valve {
             flow_rate: r.flow_rate,
@@ -239,11 +230,8 @@ fn main() {
         });
         graph_state.valve_states.push(ValveState { is_open: false })
     }
-
     let start_node_idx = name_table["AA"];
-
     graph_state.flow_left = graph.iter().map(|v| v.flow_rate).sum();
-
     let result = find_max_volume(
         &graph,
         &mut graph_state,
@@ -254,6 +242,158 @@ fn main() {
         0,
         26,
     );
+    result
+}
+
+fn read_input() -> Vec<String> {
+    let stdin = io::stdin();
+    let mut lines: Vec<String> = Vec::new();
+    for l in stdin.lock().lines() {
+        let line = l.unwrap();
+        if line.len() == 0 {
+            break;
+        }
+        lines.push(line);
+    }
+    lines
+}
+
+fn main() {
+    println!("Hello, world!");
+
+    let lines = read_input();
+    let result = find_max_volume_for_input(lines);
 
     println!("{}", result);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{find_max_volume_for_input, parse_line, ParseResult};
+
+    #[test]
+    fn parse_line_works_for_single_edge() {
+        let result = parse_line("Valve AA has flow rate=42; tunnel leads to valve DD");
+        assert_eq!(
+            result,
+            Some(ParseResult {
+                valve_name: "AA".to_string(),
+                flow_rate: 42,
+                edges: vec!["DD".to_string()]
+            })
+        );
+    }
+
+    #[test]
+    fn parse_line_works_for_single_digit() {
+        let result = parse_line("Valve AA has flow rate=4; tunnel leads to valve DD");
+        assert_eq!(
+            result,
+            Some(ParseResult {
+                valve_name: "AA".to_string(),
+                flow_rate: 4,
+                edges: vec!["DD".to_string()]
+            })
+        );
+    }
+
+    #[test]
+    fn parse_line_works_for_multiple_edges() {
+        let result = parse_line("Valve AA has flow rate=42; tunnels lead to valves DD, II, BB");
+        assert_eq!(
+            result,
+            Some(ParseResult {
+                valve_name: "AA".to_string(),
+                flow_rate: 42,
+                edges: vec!["DD".to_string(), "II".to_string(), "BB".to_string()]
+            })
+        );
+    }
+
+    #[test]
+    fn example_works() {
+        let input: Vec<String> = vec![
+            "Valve AA has flow rate=0; tunnels lead to valves DD, II, BB",
+            "Valve BB has flow rate=13; tunnels lead to valves CC, AA",
+            "Valve CC has flow rate=2; tunnels lead to valves DD, BB",
+            "Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE",
+            "Valve EE has flow rate=3; tunnels lead to valves FF, DD",
+            "Valve FF has flow rate=0; tunnels lead to valves EE, GG",
+            "Valve GG has flow rate=0; tunnels lead to valves FF, HH",
+            "Valve HH has flow rate=22; tunnel leads to valve GG",
+            "Valve II has flow rate=0; tunnels lead to valves AA, JJ",
+            "Valve JJ has flow rate=21; tunnel leads to valve II",
+        ]
+        .iter()
+        .map(|l| l.to_string())
+        .collect();
+
+        let result = find_max_volume_for_input(input);
+
+        assert_eq!(result, 1707);
+    }
+
+    #[ignore]
+    #[test]
+    fn big_example_works() {
+        let input: Vec<String> = vec![
+            "Valve QJ has flow rate=11; tunnels lead to valves HB, GL",
+            "Valve VZ has flow rate=10; tunnel leads to valve NE",
+            "Valve TX has flow rate=19; tunnels lead to valves MG, OQ, HM",
+            "Valve ZI has flow rate=5; tunnels lead to valves BY, ON, RU, LF, JR",
+            "Valve IH has flow rate=0; tunnels lead to valves YB, QS",
+            "Valve QS has flow rate=22; tunnel leads to valve IH",
+            "Valve QB has flow rate=0; tunnels lead to valves QX, ES",
+            "Valve NX has flow rate=0; tunnels lead to valves UH, OP",
+            "Valve PJ has flow rate=0; tunnels lead to valves OC, UH",
+            "Valve OR has flow rate=6; tunnels lead to valves QH, BH, HB, JD",
+            "Valve OC has flow rate=7; tunnels lead to valves IZ, JR, TA, ZH, PJ",
+            "Valve UC has flow rate=0; tunnels lead to valves AA, BY",
+            "Valve QX has flow rate=0; tunnels lead to valves AA, QB",
+            "Valve IZ has flow rate=0; tunnels lead to valves OC, SX",
+            "Valve AG has flow rate=13; tunnels lead to valves NW, GL, SM",
+            "Valve ON has flow rate=0; tunnels lead to valves MO, ZI",
+            "Valve XT has flow rate=18; tunnels lead to valves QZ, PG",
+            "Valve AX has flow rate=0; tunnels lead to valves UH, MO",
+            "Valve JD has flow rate=0; tunnels lead to valves OR, SM",
+            "Valve HM has flow rate=0; tunnels lead to valves TX, QH",
+            "Valve LF has flow rate=0; tunnels lead to valves ZI, UH",
+            "Valve QH has flow rate=0; tunnels lead to valves OR, HM",
+            "Valve RT has flow rate=21; tunnel leads to valve PG",
+            "Valve NE has flow rate=0; tunnels lead to valves VZ, TA",
+            "Valve OQ has flow rate=0; tunnels lead to valves TX, GE",
+            "Valve AA has flow rate=0; tunnels lead to valves QZ, UC, OP, QX, EH",
+            "Valve UH has flow rate=17; tunnels lead to valves PJ, NX, AX, LF",
+            "Valve GE has flow rate=0; tunnels lead to valves YB, OQ",
+            "Valve EH has flow rate=0; tunnels lead to valves AA, MO",
+            "Valve MG has flow rate=0; tunnels lead to valves TX, NW",
+            "Valve YB has flow rate=20; tunnels lead to valves IH, GE, XG",
+            "Valve MO has flow rate=15; tunnels lead to valves EH, ON, AX, ZH, CB",
+            "Valve JR has flow rate=0; tunnels lead to valves ZI, OC",
+            "Valve GL has flow rate=0; tunnels lead to valves AG, QJ",
+            "Valve SM has flow rate=0; tunnels lead to valves JD, AG",
+            "Valve HB has flow rate=0; tunnels lead to valves OR, QJ",
+            "Valve TA has flow rate=0; tunnels lead to valves OC, NE",
+            "Valve PG has flow rate=0; tunnels lead to valves RT, XT",
+            "Valve XG has flow rate=0; tunnels lead to valves CB, YB",
+            "Valve ES has flow rate=9; tunnels lead to valves QB, FL",
+            "Valve BH has flow rate=0; tunnels lead to valves RU, OR",
+            "Valve FL has flow rate=0; tunnels lead to valves SX, ES",
+            "Valve CB has flow rate=0; tunnels lead to valves MO, XG",
+            "Valve QZ has flow rate=0; tunnels lead to valves AA, XT",
+            "Valve BY has flow rate=0; tunnels lead to valves UC, ZI",
+            "Valve ZH has flow rate=0; tunnels lead to valves MO, OC",
+            "Valve OP has flow rate=0; tunnels lead to valves NX, AA",
+            "Valve NW has flow rate=0; tunnels lead to valves MG, AG",
+            "Valve RU has flow rate=0; tunnels lead to valves ZI, BH",
+            "Valve SX has flow rate=16; tunnels lead to valves IZ, FL",
+        ]
+        .iter()
+        .map(|l| l.to_string())
+        .collect();
+
+        let result = find_max_volume_for_input(input);
+
+        assert_eq!(result, 2602);
+    }
 }

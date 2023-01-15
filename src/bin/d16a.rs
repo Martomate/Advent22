@@ -34,13 +34,11 @@ fn parse_line(line: &str) -> Option<ParseResult> {
     })
 }
 
-#[derive(Debug)]
 struct Node {
     flow_rate: u32,
     edges: Vec<usize>,
 }
 
-#[derive(Debug)]
 struct NodeState {
     is_open: bool,
 }
