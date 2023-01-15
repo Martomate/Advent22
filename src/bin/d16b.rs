@@ -3,6 +3,8 @@ use std::{
     io::{self, BufRead},
 };
 
+use bit_set::BitSet;
+
 #[derive(Debug, PartialEq)]
 struct ParseResult {
     valve_name: String,
@@ -39,14 +41,11 @@ struct Valve {
     edges: Vec<usize>,
 }
 
-struct ValveState {
-    is_open: bool,
-}
-
 struct GraphState {
-    valve_states: Vec<ValveState>,
+    valves_open: BitSet<u64>,
     flow_left: u32,
     max_volume_so_far: u32,
+    memoized_results: HashMap<(BitSet<u64>, usize, usize, u32), u32>,
 }
 
 /** My goodness! This is a disgrace! */
@@ -69,13 +68,22 @@ fn find_max_volume(
     if volume_so_far + graph_state.flow_left * (time_left - 1) < graph_state.max_volume_so_far {
         return 0; // this cannot possibly be the best branch, so just give up
     }
+    let memo_key = (
+        graph_state.valves_open.clone(),
+        node1_idx.min(node2_idx),
+        node1_idx.max(node2_idx),
+        time_left,
+    );
+    if let Some(result) = graph_state.memoized_results.get(&memo_key) {
+        return *result;
+    }
 
     let mut max_volume = 0u32;
 
     // both open
     if node1_idx != node2_idx
-        && !graph_state.valve_states[node1_idx].is_open
-        && !graph_state.valve_states[node2_idx].is_open
+        && !graph_state.valves_open.contains(node1_idx)
+        && !graph_state.valves_open.contains(node2_idx)
         && graph[node1_idx].flow_rate != 0
         && graph[node2_idx].flow_rate != 0
     {
@@ -83,8 +91,8 @@ fn find_max_volume(
 
         let flow = graph[node1_idx].flow_rate + graph[node2_idx].flow_rate;
 
-        graph_state.valve_states[node1_idx].is_open = true;
-        graph_state.valve_states[node2_idx].is_open = true;
+        graph_state.valves_open.insert(node1_idx);
+        graph_state.valves_open.insert(node2_idx);
         graph_state.flow_left -= flow;
 
         let volume_added_here = flow * (time_left - 1);
@@ -104,16 +112,16 @@ fn find_max_volume(
         }
 
         graph_state.flow_left += flow;
-        graph_state.valve_states[node2_idx].is_open = false;
-        graph_state.valve_states[node1_idx].is_open = false;
+        graph_state.valves_open.remove(node2_idx);
+        graph_state.valves_open.remove(node1_idx);
     }
 
     // 1 opens, 2 walks
-    if !graph_state.valve_states[node1_idx].is_open && graph[node1_idx].flow_rate != 0 {
+    if !graph_state.valves_open.contains(node1_idx) && graph[node1_idx].flow_rate != 0 {
         // try to perform an "open valve" action
 
         let flow = graph[node1_idx].flow_rate;
-        graph_state.valve_states[node1_idx].is_open = true;
+        graph_state.valves_open.insert(node1_idx);
         graph_state.flow_left -= flow;
 
         let volume_added_here = flow * (time_left - 1);
@@ -141,15 +149,15 @@ fn find_max_volume(
         }
 
         graph_state.flow_left += flow;
-        graph_state.valve_states[node1_idx].is_open = false;
+        graph_state.valves_open.remove(node1_idx);
     }
 
     // 2 opens, 1 walks
-    if !graph_state.valve_states[node2_idx].is_open && graph[node2_idx].flow_rate != 0 {
+    if !graph_state.valves_open.contains(node2_idx) && graph[node2_idx].flow_rate != 0 {
         // try to perform an "open valve" action
 
         let flow = graph[node2_idx].flow_rate;
-        graph_state.valve_states[node2_idx].is_open = true;
+        graph_state.valves_open.insert(node2_idx);
         graph_state.flow_left -= flow;
 
         let volume_added_here = flow * (time_left - 1);
@@ -177,7 +185,7 @@ fn find_max_volume(
         }
 
         graph_state.flow_left += flow;
-        graph_state.valve_states[node2_idx].is_open = false;
+        graph_state.valves_open.remove(node2_idx);
     }
 
     // both walk
@@ -205,6 +213,8 @@ fn find_max_volume(
         }
     }
 
+    graph_state.memoized_results.insert(memo_key, max_volume);
+
     max_volume
 }
 
@@ -219,16 +229,16 @@ fn find_max_volume_for_input(input: Vec<String>) -> u32 {
     }
     let mut graph: Vec<Valve> = Vec::new();
     let mut graph_state: GraphState = GraphState {
-        valve_states: Vec::new(),
+        valves_open: BitSet::default(),
         flow_left: 0,
         max_volume_so_far: 0,
+        memoized_results: HashMap::new(),
     };
     for r in parsed_lines {
         graph.push(Valve {
             flow_rate: r.flow_rate,
             edges: r.edges.iter().map(|name| name_table[name]).collect(),
         });
-        graph_state.valve_states.push(ValveState { is_open: false })
     }
     let start_node_idx = name_table["AA"];
     graph_state.flow_left = graph.iter().map(|v| v.flow_rate).sum();
@@ -333,7 +343,6 @@ mod tests {
         assert_eq!(result, 1707);
     }
 
-    #[ignore]
     #[test]
     fn big_example_works() {
         let input: Vec<String> = vec![

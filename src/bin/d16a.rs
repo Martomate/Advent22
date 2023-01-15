@@ -3,6 +3,8 @@ use std::{
     io::{self, BufRead},
 };
 
+use bit_set::BitSet;
+
 #[derive(Debug, PartialEq)]
 struct ParseResult {
     valve_name: String,
@@ -39,14 +41,11 @@ struct Node {
     edges: Vec<usize>,
 }
 
-struct NodeState {
-    is_open: bool,
-}
-
 struct GraphState {
-    valve_states: Vec<NodeState>,
+    valves_open: BitSet<u64>,
     flow_left: u32,
     max_volume_so_far: u32,
+    memoized_results: HashMap<(BitSet<u64>, usize, u32), u32>,
 }
 
 fn find_max_volume(
@@ -66,14 +65,18 @@ fn find_max_volume(
     if volume_so_far + graph_state.flow_left * (time_left - 1) < graph_state.max_volume_so_far {
         return 0; // this cannot possibly be the best branch, so just give up
     }
+    let memo_key = (graph_state.valves_open.clone(), node_idx, time_left);
+    if let Some(result) = graph_state.memoized_results.get(&memo_key) {
+        return *result;
+    }
 
     let mut max_volume = 0u32;
 
-    if !graph_state.valve_states[node_idx].is_open && graph[node_idx].flow_rate != 0 {
+    if !graph_state.valves_open.contains(node_idx) && graph[node_idx].flow_rate != 0 {
         // try to perform an "open valve" action
 
         let flow = graph[node_idx].flow_rate;
-        graph_state.valve_states[node_idx].is_open = true;
+        graph_state.valves_open.insert(node_idx);
         graph_state.flow_left -= flow;
 
         let volume_added_here = flow * (time_left - 1);
@@ -88,7 +91,7 @@ fn find_max_volume(
         max_volume = volume_added_here + volume_added_later;
 
         graph_state.flow_left += flow;
-        graph_state.valve_states[node_idx].is_open = false;
+        graph_state.valves_open.remove(node_idx);
     }
 
     for i in 0..graph[node_idx].edges.len() {
@@ -110,6 +113,8 @@ fn find_max_volume(
         }
     }
 
+    graph_state.memoized_results.insert(memo_key, max_volume);
+
     max_volume
 }
 
@@ -124,16 +129,16 @@ fn find_max_volume_for_input(input: Vec<String>) -> u32 {
     }
     let mut graph: Vec<Node> = Vec::new();
     let mut graph_state: GraphState = GraphState {
-        valve_states: Vec::new(),
+        valves_open: BitSet::default(),
         flow_left: 0,
         max_volume_so_far: 0,
+        memoized_results: HashMap::new(),
     };
     for r in parsed_lines {
         graph.push(Node {
             flow_rate: r.flow_rate,
             edges: r.edges.iter().map(|name| name_table[name]).collect(),
         });
-        graph_state.valve_states.push(NodeState { is_open: false })
     }
     let start_node_idx = name_table["AA"];
     graph_state.flow_left = graph.iter().map(|v| v.flow_rate).sum();
