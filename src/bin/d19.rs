@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     io::{self, BufRead},
-    ops::{Add, Index, IndexMut, Sub},
+    ops::{Add, Index, IndexMut, Sub}, time::Instant, env,
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -142,7 +142,7 @@ struct Blueprint {
 }
 
 impl Blueprint {
-    fn simulate(&self, state: SimulationState, cache: &mut HashMap<SimulationState, u32>) -> u32 {
+    fn simulate(&self, state: SimulationState, cache: &mut HashMap<SimulationState, u32>, best_so_far: u32) -> u32 {
         let SimulationState {
             resources,
             robots,
@@ -153,13 +153,15 @@ impl Blueprint {
             return resources[Resource::Geode];
         }
 
-        if let Some(&value) = cache.get(&state) {
-            return value;
+        if steps_left > 6 {
+            if let Some(&value) = cache.get(&state) {
+                return value;
+            }
         }
 
         let added_resources = robots;
 
-        let mut best_result: u32 = 0;
+        let mut best_result: u32 = best_so_far;
         let mut recipes_afforded: u32 = 0;
 
         for r in [Resource::Geode, Resource::Obsidian, Resource::Clay, Resource::Ore] {
@@ -177,6 +179,7 @@ impl Blueprint {
                     let result = self.simulate(
                         new_state,
                         cache,
+                        best_result,
                     );
 
                     if result > best_result {
@@ -199,6 +202,7 @@ impl Blueprint {
                 let result = self.simulate(
                     new_state,
                     cache,
+                    best_result,
                 );
 
                 if result > best_result {
@@ -211,7 +215,9 @@ impl Blueprint {
         // maybe start building a new robot, and queue one robot of production
         // for each item in the queue add it to the stock
 
-        cache.insert(state, best_result);
+        if steps_left > 6 {
+            cache.insert(state, best_result);
+        }
 
         best_result
     }
@@ -222,23 +228,47 @@ enum BlueprintParseError {
     MissingRecipe(Resource),
 }
 
-fn run_program(lines: Vec<String>, steps: u32) -> u32 {
+fn run_program(lines: Vec<String>, steps: u32, perform_sum: bool) -> u32 {
     let blueprints: Vec<Blueprint> = parse_blueprints(lines).unwrap();
 
-    return blueprints
-        .iter()
-        .map(|b| {
-            let mut cache = HashMap::new();
-            b.simulate(
-                SimulationState {
-                    resources: ResourceSlice::new(),
-                    robots: ResourceSlice::new().with(Resource::Ore, 1),
-                    steps_left: steps,
-                },
-                &mut cache,
-            ) * b.id
-        })
-        .sum();
+    if perform_sum {
+        return blueprints
+            .iter()
+            .map(|b| {
+                let mut cache = HashMap::new();
+                let quality = b.simulate(
+                    SimulationState {
+                        resources: ResourceSlice::new(),
+                        robots: ResourceSlice::new().with(Resource::Ore, 1),
+                        steps_left: steps,
+                    },
+                    &mut cache,
+                    0,
+                );
+                println!("{}: {}", b.id, quality);
+                quality * b.id
+            })
+            .sum();
+    } else {
+        return blueprints
+            .iter()
+            .take(3)
+            .map(|b| {
+                let mut cache = HashMap::new();
+                let quality = b.simulate(
+                    SimulationState {
+                        resources: ResourceSlice::new(),
+                        robots: ResourceSlice::new().with(Resource::Ore, 1),
+                        steps_left: steps,
+                    },
+                    &mut cache,
+                    0,
+                );
+                println!("{}: {}", b.id, quality);
+                quality
+            })
+            .product();
+    }
 }
 
 fn parse_recipe(s: &str) -> Option<Recipe> {
@@ -312,6 +342,18 @@ fn parse_blueprints(lines: Vec<String>) -> Result<Vec<Blueprint>, BlueprintParse
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    
+    let steps = args.iter().find_map(|s| match s.split_once('=') {
+        Some(("steps", v)) => v.parse::<u32>().ok(),
+        _ => None,
+    }).unwrap_or(24);
+
+    let perform_sum = args.iter().find_map(|s| match s.split_once("=") {
+        Some(("mode", v)) => Some(v == "sum"),
+        _ => None,
+    }).unwrap_or(true);
+
     let stdin = io::stdin();
 
     let mut lines: Vec<String> = Vec::new();
@@ -319,16 +361,23 @@ fn main() {
     for l in stdin.lock().lines() {
         let line = l.unwrap();
 
-        if line.len() == 0 && lines.last().map(|s| s.len() == 0).is_some() {
+        if line.len() == 0 && lines.last().filter(|&s| s.len() == 0).is_some() {
             break;
         }
 
         lines.push(line);
     }
 
-    let res = run_program(lines, 24);
+    println!("Calculating {} steps in '{}' mode...", steps, if perform_sum { "sum" } else { "product" });
 
-    println!("{}", res);
+    let now = Instant::now();
+
+    let res = run_program(lines, steps, perform_sum);
+
+    let elapsed_time = now.elapsed();
+
+    println!("Time: {} seconds.", elapsed_time.as_secs_f32());
+    println!("Answer: {}", res);
 }
 
 #[cfg(test)]
@@ -424,8 +473,30 @@ Blueprint 2:
     }
 
     #[test]
-    fn example_works() {
-        let lines = "\
+    fn example_works_part_1() {
+        let lines = small_example();
+
+        assert_eq!(run_program(lines, 24, true), 33);
+    }
+
+    #[test]
+    #[ignore]
+    fn big_example_works_part_1() {
+        let lines = big_example();
+
+        assert_eq!(run_program(lines, 24, true), 1725);
+    }
+
+    #[test]
+    #[ignore]
+    fn big_example_works_part_2() {
+        let lines = big_example();
+
+        assert_eq!(run_program(lines, 32, false), 15510);
+    }
+
+    fn small_example() -> Vec<String> {
+        "\
 Blueprint 1:
   Each ore robot costs 4 ore.
   Each clay robot costs 2 ore.
@@ -439,8 +510,43 @@ Blueprint 2:
   Each geode robot costs 3 ore and 12 obsidian."
             .split('\n')
             .map(|s| s.to_owned())
-            .collect();
+            .collect()
+    }
 
-        assert_eq!(run_program(lines, 24), 33);
+    fn big_example() -> Vec<String> {
+        "\
+Blueprint 1: Each ore robot costs 3 ore. Each clay robot costs 3 ore. Each obsidian robot costs 2 ore and 20 clay. Each geode robot costs 2 ore and 20 obsidian.
+Blueprint 2: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 4 ore and 9 clay. Each geode robot costs 3 ore and 9 obsidian.
+Blueprint 3: Each ore robot costs 3 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 2 ore and 12 obsidian.
+Blueprint 4: Each ore robot costs 4 ore. Each clay robot costs 3 ore. Each obsidian robot costs 2 ore and 19 clay. Each geode robot costs 3 ore and 10 obsidian.
+Blueprint 5: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 4 ore and 14 clay. Each geode robot costs 3 ore and 16 obsidian.
+Blueprint 6: Each ore robot costs 3 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 17 clay. Each geode robot costs 4 ore and 8 obsidian.
+Blueprint 7: Each ore robot costs 3 ore. Each clay robot costs 4 ore. Each obsidian robot costs 4 ore and 14 clay. Each geode robot costs 4 ore and 10 obsidian.
+Blueprint 8: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 4 ore and 12 clay. Each geode robot costs 4 ore and 19 obsidian.
+Blueprint 9: Each ore robot costs 4 ore. Each clay robot costs 3 ore. Each obsidian robot costs 4 ore and 18 clay. Each geode robot costs 4 ore and 11 obsidian.
+Blueprint 10: Each ore robot costs 4 ore. Each clay robot costs 3 ore. Each obsidian robot costs 4 ore and 5 clay. Each geode robot costs 3 ore and 10 obsidian.
+Blueprint 11: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 4 ore and 7 clay. Each geode robot costs 2 ore and 19 obsidian.
+Blueprint 12: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 2 ore and 11 clay. Each geode robot costs 3 ore and 14 obsidian.
+Blueprint 13: Each ore robot costs 2 ore. Each clay robot costs 2 ore. Each obsidian robot costs 2 ore and 8 clay. Each geode robot costs 2 ore and 14 obsidian.
+Blueprint 14: Each ore robot costs 2 ore. Each clay robot costs 2 ore. Each obsidian robot costs 2 ore and 17 clay. Each geode robot costs 2 ore and 10 obsidian.
+Blueprint 15: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 2 ore and 9 clay. Each geode robot costs 3 ore and 15 obsidian.
+Blueprint 16: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 2 ore and 7 clay. Each geode robot costs 4 ore and 13 obsidian.
+Blueprint 17: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 9 clay. Each geode robot costs 3 ore and 9 obsidian.
+Blueprint 18: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 2 ore and 14 clay. Each geode robot costs 3 ore and 20 obsidian.
+Blueprint 19: Each ore robot costs 4 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 17 clay. Each geode robot costs 3 ore and 13 obsidian.
+Blueprint 20: Each ore robot costs 3 ore. Each clay robot costs 4 ore. Each obsidian robot costs 4 ore and 5 clay. Each geode robot costs 4 ore and 8 obsidian.
+Blueprint 21: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 3 ore and 10 clay. Each geode robot costs 2 ore and 14 obsidian.
+Blueprint 22: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 20 obsidian.
+Blueprint 23: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 4 ore and 16 clay. Each geode robot costs 2 ore and 15 obsidian.
+Blueprint 24: Each ore robot costs 4 ore. Each clay robot costs 3 ore. Each obsidian robot costs 2 ore and 13 clay. Each geode robot costs 2 ore and 9 obsidian.
+Blueprint 25: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 2 ore and 12 clay. Each geode robot costs 3 ore and 15 obsidian.
+Blueprint 26: Each ore robot costs 4 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 18 clay. Each geode robot costs 4 ore and 8 obsidian.
+Blueprint 27: Each ore robot costs 4 ore. Each clay robot costs 4 ore. Each obsidian robot costs 3 ore and 19 clay. Each geode robot costs 4 ore and 15 obsidian.
+Blueprint 28: Each ore robot costs 3 ore. Each clay robot costs 4 ore. Each obsidian robot costs 3 ore and 20 clay. Each geode robot costs 3 ore and 14 obsidian.
+Blueprint 29: Each ore robot costs 2 ore. Each clay robot costs 4 ore. Each obsidian robot costs 4 ore and 16 clay. Each geode robot costs 4 ore and 17 obsidian.
+Blueprint 30: Each ore robot costs 3 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 9 clay. Each geode robot costs 3 ore and 7 obsidian."
+            .split('\n')
+            .map(|s| s.to_owned())
+            .collect()
     }
 }
