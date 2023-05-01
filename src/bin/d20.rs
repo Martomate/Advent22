@@ -7,22 +7,23 @@ mod examples {
 
     pub fn parse_input(input: &str) -> Result<Vec<i64>, ParseIntError> {
         input
-            .split("\n")
+            .split('\n')
             .map(|l| l.parse::<i64>())
-            .into_iter()
             .collect()
     }
 
     pub fn example_input(use_example_2: bool) -> &'static str {
         if use_example_2 {
-            return include_str!("d20_ex_2.txt");
+            include_str!("d20_ex_2.txt")
         } else {
-            return include_str!("d20_ex_1.txt");
+            include_str!("d20_ex_1.txt")
         }
     }
 }
 
 mod crypto {
+    use std::cmp::Ordering;
+
     /// for each element x: count x steps forward (looping around if needed), remove x, insert x after the new position
     pub fn mix(seq: Vec<i64>, rounds: u32) -> Vec<i64> {
         let seq_len = seq.len() as i64;
@@ -44,35 +45,35 @@ mod crypto {
                 let dest = (dest + (seq_len - 1)) % (seq_len - 1);
                 let dest = dest as usize;
 
-                if dest == src {
-                    continue;
-                }
+                match dest.cmp(&src) {
+                    Ordering::Equal => continue,
+                    Ordering::Greater => {
+                        for i in (src + 1)..=dest {
+                            res_idx[seq_idx[i]] -= 1;
+                        }
+                        res_idx[seq_idx[src]] = dest;
 
-                if dest > src {
-                    for i in (src + 1)..=dest {
-                        res_idx[seq_idx[i]] -= 1;
+                        for i in (src + 1)..=dest {
+                            res[i - 1] = res[i];
+                            seq_idx[i - 1] = seq_idx[i];
+                        }
+                        res[dest] = here;
+                        seq_idx[dest] = n;
                     }
-                    res_idx[seq_idx[src]] = dest;
+                    Ordering::Less => {
+                        for i in dest..src {
+                            res_idx[seq_idx[i]] += 1;
+                        }
+                        res_idx[seq_idx[src]] = dest;
 
-                    for i in (src + 1)..=dest {
-                        res[i - 1] = res[i];
-                        seq_idx[i - 1] = seq_idx[i];
+                        for i in (dest..src).rev() {
+                            res[i + 1] = res[i];
+                            seq_idx[i + 1] = seq_idx[i];
+                        }
+                        res[dest] = here;
+                        seq_idx[dest] = n;
                     }
-                    res[dest] = here;
-                    seq_idx[dest] = n;
-                } else if dest < src {
-                    for i in dest..src {
-                        res_idx[seq_idx[i]] += 1;
-                    }
-                    res_idx[seq_idx[src]] = dest;
-
-                    for i in (dest..src).rev() {
-                        res[i + 1] = res[i];
-                        seq_idx[i + 1] = seq_idx[i];
-                    }
-                    res[dest] = here;
-                    seq_idx[dest] = n;
-                }
+                };
             }
         }
 
@@ -87,9 +88,8 @@ mod crypto {
         let res1 = mixed[(zero_pos + 1000) % mixed.len()];
         let res2 = mixed[(zero_pos + 2000) % mixed.len()];
         let res3 = mixed[(zero_pos + 3000) % mixed.len()];
-        let res = res1 + res2 + res3;
 
-        res
+        res1 + res2 + res3
     }
 
     #[cfg(test)]

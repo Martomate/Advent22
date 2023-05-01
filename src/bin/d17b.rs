@@ -99,7 +99,6 @@ fn parse_wind_list(line: String) -> Result<Vec<WindDirection>, String> {
             _ => Err(format!("invalid wind direction: {}", c)),
         })
         .collect::<Result<Vec<_>, _>>()
-        .map_err(|err| err.to_string())
 }
 
 type CacheKey = ([usize; 7], usize, usize);
@@ -180,8 +179,8 @@ impl Board {
         // make sure we still need caching
         if self.extra_height == 0 {
             let mut col_depths: [usize; 7] = Default::default();
-            for i in 0..7 {
-                col_depths[i] = self.rows.len() - self.col_height[i];
+            for (i, col_depth) in col_depths.iter_mut().enumerate() {
+                *col_depth = self.rows.len() - self.col_height[i];
             }
             cache_key = Some((col_depths, self.wind.index, shape_idx));
         }

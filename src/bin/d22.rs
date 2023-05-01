@@ -19,7 +19,7 @@ fn parse_instructions(s: &str) -> Vec<Instruction> {
             instructions.push(Instruction::TurnRight);
             steps = 0;
         } else {
-            steps = steps * 10 + ((c as u8 - '0' as u8) as u32);
+            steps = steps * 10 + ((c as u8 - b'0') as u32);
         }
     }
 
@@ -222,7 +222,7 @@ fn parse_input(input: Vec<&str>) -> (Board, Vec<Instruction>) {
     let mut steps: Option<&str> = None;
 
     for line in input.iter() {
-        if line.len() == 0 {
+        if line.is_empty() {
             board_done = true;
         } else if !board_done {
             lines.push(line);
@@ -511,11 +511,11 @@ mod tests {
 
     #[test]
     fn small_example_should_work() {
-        assert_eq!(run_program(include_str!("d22_ex_1.txt").split("\n").collect()), 6032);
+        assert_eq!(run_program(include_str!("d22_ex_1.txt").split('\n').collect()), 6032);
     }
 
     #[test]
     fn big_example_should_work() {
-        assert_eq!(run_program(include_str!("d22_ex_2.txt").split("\n").collect()), 117102);
+        assert_eq!(run_program(include_str!("d22_ex_2.txt").split('\n').collect()), 117102);
     }
 }

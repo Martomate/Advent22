@@ -22,7 +22,7 @@ struct Monkey {
     inspections: u32,
 }
 
-fn parse_monkey(lines: &Vec<String>) -> Monkey {
+fn parse_monkey(lines: &[String]) -> Monkey {
     let items: Vec<i32> = lines[1][(lines[1].find(':').unwrap() + 2)..]
         .split(", ")
         .map(|a| a.parse::<i32>().unwrap())
@@ -106,8 +106,8 @@ fn main() {
     let stdin = io::stdin();
     for l in stdin.lock().lines() {
         let line = l.unwrap();
-        if line.len() == 0 {
-            if last_monkey_lines.len() == 0 {
+        if line.is_empty() {
+            if last_monkey_lines.is_empty() {
                 break;
             } else {
                 monkeys.push(parse_monkey(&last_monkey_lines));

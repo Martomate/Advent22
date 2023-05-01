@@ -40,7 +40,7 @@ fn main() {
     let stdin = io::stdin();
     for l in stdin.lock().lines() {
         let line = l.unwrap();
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 

@@ -9,7 +9,7 @@ fn main() {
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
         let l = line.unwrap();
-        if l.len() != 0 {
+        if !l.is_empty() {
             let c = l.parse::<i32>().unwrap();
             latest += c;
         } else {

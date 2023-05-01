@@ -1,6 +1,6 @@
 use std::io::{self, BufRead};
 
-fn visible_trees(grid: &Vec<Vec<i8>>, tx: usize, ty: usize, dx: i32, dy: i32) -> u32 {
+fn visible_trees(grid: &[Vec<i8>], tx: usize, ty: usize, dx: i32, dy: i32) -> u32 {
     let h = grid.len() as i32;
     let w = grid[0].len() as i32;
     let here = grid[ty][tx];
@@ -22,14 +22,14 @@ fn visible_trees(grid: &Vec<Vec<i8>>, tx: usize, ty: usize, dx: i32, dy: i32) ->
         }
     }
     // at this point (x, y) is the last tree in sight
-    return (tx as i32).abs_diff(x) + (ty as i32).abs_diff(y);
+    (tx as i32).abs_diff(x) + (ty as i32).abs_diff(y)
 }
 
-fn scenic_score(grid: &Vec<Vec<i8>>, tx: usize, ty: usize) -> u32 {
-    visible_trees(&grid, tx, ty, 1, 0)
-        * visible_trees(&grid, tx, ty, -1, 0)
-        * visible_trees(&grid, tx, ty, 0, 1)
-        * visible_trees(&grid, tx, ty, 0, -1)
+fn scenic_score(grid: &[Vec<i8>], tx: usize, ty: usize) -> u32 {
+    visible_trees(grid, tx, ty, 1, 0)
+        * visible_trees(grid, tx, ty, -1, 0)
+        * visible_trees(grid, tx, ty, 0, 1)
+        * visible_trees(grid, tx, ty, 0, -1)
 }
 
 fn main() {
@@ -40,7 +40,7 @@ fn main() {
     let stdin = io::stdin();
     for l in stdin.lock().lines() {
         let line = l.unwrap();
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 

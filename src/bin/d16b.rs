@@ -50,12 +50,10 @@ struct GraphState {
 
 /** My goodness! This is a disgrace! */
 fn find_max_volume(
-    graph: &Vec<Valve>,
+    graph: &[Valve],
     graph_state: &mut GraphState,
-    node1_idx: usize,
-    prev1_idx: usize,
-    node2_idx: usize,
-    prev2_idx: usize,
+    node_idx: (usize, usize),
+    prev_idx: (usize, usize),
     volume_so_far: u32,
     time_left: u32,
 ) -> u32 {
@@ -68,6 +66,10 @@ fn find_max_volume(
     if volume_so_far + graph_state.flow_left * (time_left - 1) < graph_state.max_volume_so_far {
         return 0; // this cannot possibly be the best branch, so just give up
     }
+
+    let (node1_idx, node2_idx) = node_idx;
+    let (prev1_idx, prev2_idx) = prev_idx;
+
     let memo_key = (
         graph_state.valves_open.clone(),
         node1_idx.min(node2_idx),
@@ -100,10 +102,8 @@ fn find_max_volume(
             + find_max_volume(
                 graph,
                 graph_state,
-                node1_idx,
-                node1_idx,
-                node2_idx,
-                node2_idx,
+                (node1_idx, node2_idx),
+                (node1_idx, node2_idx),
                 volume_so_far + volume_added_here,
                 time_left - 1,
             );
@@ -135,10 +135,8 @@ fn find_max_volume(
                     + find_max_volume(
                         graph,
                         graph_state,
-                        node1_idx,
-                        node1_idx,
-                        next_idx,
-                        node2_idx,
+                        (node1_idx, next_idx),
+                        (node1_idx, node2_idx),
                         volume_so_far + volume_added_here,
                         time_left - 1,
                     );
@@ -171,10 +169,8 @@ fn find_max_volume(
                     + find_max_volume(
                         graph,
                         graph_state,
-                        next_idx,
-                        node1_idx,
-                        node2_idx,
-                        node2_idx,
+                        (next_idx, node2_idx),
+                        (node1_idx, node2_idx),
                         volume_so_far + volume_added_here,
                         time_left - 1,
                     );
@@ -199,10 +195,8 @@ fn find_max_volume(
                 let volume = find_max_volume(
                     graph,
                     graph_state,
-                    next1_idx,
-                    node1_idx,
-                    next2_idx,
-                    node2_idx,
+                    (next1_idx, next2_idx),
+                    (node1_idx, node2_idx),
                     volume_so_far,
                     time_left - 1,
                 );
@@ -242,17 +236,15 @@ fn find_max_volume_for_input(input: Vec<String>) -> u32 {
     }
     let start_node_idx = name_table["AA"];
     graph_state.flow_left = graph.iter().map(|v| v.flow_rate).sum();
-    let result = find_max_volume(
+    
+    find_max_volume(
         &graph,
         &mut graph_state,
-        start_node_idx,
-        start_node_idx,
-        start_node_idx,
-        start_node_idx,
+        (start_node_idx, start_node_idx),
+        (start_node_idx, start_node_idx),
         0,
         26,
-    );
-    result
+    )
 }
 
 fn read_input() -> Vec<String> {
@@ -260,7 +252,7 @@ fn read_input() -> Vec<String> {
     let mut lines: Vec<String> = Vec::new();
     for l in stdin.lock().lines() {
         let line = l.unwrap();
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
         lines.push(line);

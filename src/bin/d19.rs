@@ -25,7 +25,7 @@ struct ResourceSlice<T>([T; 4]);
 
 impl<T> ResourceSlice<T> {
     fn populate<F: Fn(Resource) -> T>(f: F) -> ResourceSlice<T> {
-        ResourceSlice(Resource::all().map(|r| f(r)))
+        ResourceSlice(Resource::all().map(f))
     }
 }
 
@@ -36,10 +36,9 @@ impl<T: Default> ResourceSlice<T> {
 }
 
 impl<T: Clone> ResourceSlice<T> {
-    fn with(self, r: Resource, v: T) -> Self {
-        let mut res = self.clone();
-        res[r] = v;
-        res
+    fn with(mut self, r: Resource, v: T) -> Self {
+        self[r] = v;
+        self
     }
 }
 
@@ -122,12 +121,12 @@ struct Recipe {
 
 impl Recipe {
     fn new(ore: u32, clay: u32, obsidian: u32) -> Recipe {
-        return Recipe {
+        Recipe {
             input: ResourceSlice::new()
                 .with(Resource::Ore, ore)
                 .with(Resource::Clay, clay)
                 .with(Resource::Obsidian, obsidian),
-        };
+        }
     }
 
     fn affordable(&self, res: ResourceSlice<u32>) -> bool {
@@ -149,7 +148,7 @@ impl Blueprint {
             steps_left,
         } = state;
 
-        if steps_left <= 0 {
+        if steps_left == 0 {
             return resources[Resource::Geode];
         }
 
@@ -272,18 +271,18 @@ fn run_program(lines: Vec<String>, steps: u32, perform_sum: bool) -> u32 {
 }
 
 fn parse_recipe(s: &str) -> Option<Recipe> {
-    let parts: Vec<_> = s.trim().split_whitespace().map(|s| s.to_string()).collect();
+    let parts: Vec<_> = s.split_whitespace().map(|s| s.to_string()).collect();
 
     let mut recipe = Recipe::new(0, 0, 0);
 
     let mut inputs = Vec::new();
-    for (a, r) in vec![(parts.get(4), parts.get(5)), (parts.get(7), parts.get(8))] {
+    for (a, r) in [(parts.get(4), parts.get(5)), (parts.get(7), parts.get(8))] {
         if let (Some(a), Some(r)) = (a, r) {
             inputs.push((a, r));
         }
     }
 
-    if inputs.len() == 0 {
+    if inputs.is_empty() {
         return None; // the first ingredient is mandatory
     }
 
@@ -349,7 +348,7 @@ fn main() {
         _ => None,
     }).unwrap_or(24);
 
-    let perform_sum = args.iter().find_map(|s| match s.split_once("=") {
+    let perform_sum = args.iter().find_map(|s| match s.split_once('=') {
         Some(("mode", v)) => Some(v == "sum"),
         _ => None,
     }).unwrap_or(true);
@@ -361,7 +360,7 @@ fn main() {
     for l in stdin.lock().lines() {
         let line = l.unwrap();
 
-        if line.len() == 0 && lines.last().filter(|&s| s.len() == 0).is_some() {
+        if line.is_empty() && lines.last().filter(|&s| s.is_empty()).is_some() {
             break;
         }
 

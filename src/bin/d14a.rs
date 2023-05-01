@@ -33,6 +33,8 @@ impl Cave {
         self.stones.iter().max_by_key(|p| p.1).map(|r| r.1)
     }
 
+    /// Simulates a piece of sand falling from (start_x, start_y).
+    /// Returns Some((x, y)) if the sand stopped at (x, y), and None if the sand fell into the void.
     fn simulate_one_step(&self, start_x: i32, start_y: i32, floor: i32) -> Option<(i32, i32)> {
         let mut x = start_x;
         let mut y = start_y;
@@ -62,13 +64,8 @@ impl Cave {
 
     fn simulate(&mut self, start_x: i32, start_y: i32) {
         let floor = self.y_hi().unwrap();
-        loop {
-            match self.simulate_one_step(start_x, start_y, floor) {
-                Some((x, y)) => {
-                    self.sand.insert((x, y));
-                }
-                None => break, // this sand would fall into the void!
-            };
+        while let Some((x, y)) = self.simulate_one_step(start_x, start_y, floor) {
+            self.sand.insert((x, y));
         }
     }
 }
@@ -109,7 +106,7 @@ fn main() {
     for l in io::stdin().lock().lines() {
         let line = l.unwrap();
 
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 
@@ -117,7 +114,7 @@ fn main() {
             .split(" -> ")
             .map(|part| {
                 let (ls, rs) = part.split_once(',').unwrap();
-                return (ls.parse::<i32>().unwrap(), rs.parse::<i32>().unwrap());
+                (ls.parse::<i32>().unwrap(), rs.parse::<i32>().unwrap())
             })
             .collect();
 
@@ -145,14 +142,14 @@ fn main() {
     }
 
     println!("{}", cave);
-    println!("");
+    println!();
 
     cave.simulate(500, 0);
     let sand_count = cave.sand.len();
 
-    println!("");
+    println!();
     println!("{}", cave);
 
-    println!("");
+    println!();
     println!("Sand: {}", sand_count);
 }

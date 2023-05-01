@@ -80,13 +80,8 @@ impl Cave {
     }
 
     fn simulate(&mut self, start_x: i32, start_y: i32) {
-        loop {
-            match self.simulate_one_step(start_x, start_y) {
-                Some((x, y)) => {
-                    self.sand.insert((x, y));
-                }
-                None => break,
-            };
+        while let Some((x, y)) = self.simulate_one_step(start_x, start_y) {
+            self.sand.insert((x, y));
         }
     }
 }
@@ -127,7 +122,7 @@ fn main() {
     for l in io::stdin().lock().lines() {
         let line = l.unwrap();
 
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 
@@ -135,7 +130,7 @@ fn main() {
             .split(" -> ")
             .map(|part| {
                 let (ls, rs) = part.split_once(',').unwrap();
-                return (ls.parse::<i32>().unwrap(), rs.parse::<i32>().unwrap());
+                (ls.parse::<i32>().unwrap(), rs.parse::<i32>().unwrap())
             })
             .collect();
 
@@ -165,14 +160,14 @@ fn main() {
     cave.add_floor();
 
     println!("{}", cave);
-    println!("");
+    println!();
 
     cave.simulate(500, 0);
     let sand_count = cave.sand.len();
 
-    println!("");
+    println!();
     println!("{}", cave);
 
-    println!("");
+    println!();
     println!("Sand: {}", sand_count);
 }

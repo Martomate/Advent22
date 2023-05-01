@@ -1,10 +1,10 @@
 use std::io::{self, BufRead};
 
-fn occurances(s: &String) -> [bool; 52] {
+fn occurances(s: &str) -> [bool; 52] {
     let mut fbits: [bool; 52] = [false; 52];
     for c in s.chars() {
         let d = match c {
-            'a'..='z' => (c as u32) - ('a' as u32) + 0,
+            'a'..='z' => (c as u32) - ('a' as u32),
             'A'..='Z' => (c as u32) - ('A' as u32) + 26,
             _ => panic!(),
         };

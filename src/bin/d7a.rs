@@ -25,7 +25,7 @@ impl fmt::Display for LsOutput {
         match self {
             LsOutput::Dir(name) => write!(f, "Dir({})", name),
             LsOutput::File(size, name) => {
-                write!(f, "File({}, {})", name, size.to_string())
+                write!(f, "File({}, {})", name, size)
             }
         }
     }
@@ -70,7 +70,7 @@ struct DirectoryData {
 
 impl DirectoryData {
     fn update_contents(&mut self, path: &[String], contents: HashMap<String, Box<FileSystem>>) {
-        if path.len() == 0 {
+        if path.is_empty() {
             self.contents = contents;
         } else {
             let dirname = &path[0];
@@ -128,9 +128,9 @@ fn infer_file_system(commands: Vec<ExecutedCommand>) -> FileSystem {
         for command in commands {
             match command {
                 ExecutedCommand::Cd(name) => {
-                    if name == "/".to_string() {
+                    if name == *"/" {
                         current_path.clear();
-                    } else if name == "..".to_string() {
+                    } else if name == *".." {
                         current_path.pop_back();
                     } else {
                         current_path.push_back(name);
@@ -152,7 +152,7 @@ fn infer_file_system(commands: Vec<ExecutedCommand>) -> FileSystem {
                             ),
                         };
                     }
-                    root.update_contents(&current_path.as_slices().0, contents)
+                    root.update_contents(current_path.as_slices().0, contents)
                 }
             }
         }
@@ -266,9 +266,9 @@ fn fun_name(
 }
 */
 
-fn parse_line(l: &String) -> Option<ParsedLine> {
+fn parse_line(l: &str) -> Option<ParsedLine> {
     let parts: Vec<String> = l.split(' ').map(|s| s.to_string()).collect();
-    if parts.len() == 0 {
+    if parts.is_empty() {
         return None;
     }
     if parts[0] == "$" {
@@ -278,11 +278,11 @@ fn parse_line(l: &String) -> Option<ParsedLine> {
             _ => None,
         }
     } else {
-        return Some(ParsedLine::Output(parts));
+        Some(ParsedLine::Output(parts))
     }
 }
 
-fn parse_ls_output_line(words: &Vec<String>) -> LsOutput {
+fn parse_ls_output_line(words: &[String]) -> LsOutput {
     if words[0] == "dir" {
         LsOutput::Dir(words[1].clone())
     } else {
@@ -291,7 +291,7 @@ fn parse_ls_output_line(words: &Vec<String>) -> LsOutput {
     }
 }
 
-fn make_executed_command(cmd: &Command, output: &Vec<Vec<String>>) -> ExecutedCommand {
+fn make_executed_command(cmd: &Command, output: &[Vec<String>]) -> ExecutedCommand {
     match cmd {
         Command::Cd(path) => ExecutedCommand::Cd(path.clone()),
         Command::Ls => {
@@ -312,7 +312,7 @@ fn parse_input() -> Vec<ExecutedCommand> {
     for line in stdin.lock().lines() {
         let l = line.unwrap();
 
-        if l.len() == 0 {
+        if l.is_empty() {
             break;
         }
 

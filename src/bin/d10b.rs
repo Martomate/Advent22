@@ -8,11 +8,11 @@ enum Instr {
     Addx(i32),
 }
 
-struct CRT {
+struct Crt {
     pixels: [[bool; 40]; 6],
 }
 
-impl Display for CRT {
+impl Display for Crt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut s: String = String::with_capacity(41 * 6);
         for y in 0..6 {
@@ -26,20 +26,20 @@ impl Display for CRT {
     }
 }
 
-fn make_crt(xs: Vec<i32>) -> CRT {
-    let mut crt: CRT = CRT {
+fn make_crt(xs: Vec<i32>) -> Crt {
+    let mut crt: Crt = Crt {
         pixels: [[false; 40]; 6],
     };
 
-    for i in 0..xs.len() {
-        let on = xs[i].abs_diff(i as i32 % 40) <= 1;
+    for (i, x) in xs.iter().enumerate() {
+        let on = x.abs_diff(i as i32 % 40) <= 1;
         crt.pixels[i / 40][i % 40] = on;
     }
 
     crt
 }
 
-fn run_program(program: &Vec<Instr>) -> CRT {
+fn run_program(program: &Vec<Instr>) -> Crt {
     let mut x = 1;
 
     let mut x_history: Vec<i32> = Vec::new();
@@ -68,7 +68,7 @@ fn main() {
     let stdin = io::stdin();
     for l in stdin.lock().lines() {
         let line = l.unwrap();
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 

@@ -29,7 +29,7 @@ fn is_covered(readings: &Vec<SensorReading>, point: Point) -> bool {
             return true;
         }
     }
-    return false;
+    false
 }
 
 fn parse_point(s: &str) -> Option<Point> {
@@ -55,7 +55,7 @@ fn main() {
     for l in io::stdin().lock().lines() {
         let line = l.unwrap();
 
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 
@@ -80,14 +80,12 @@ fn main() {
     let mut count = 0;
     for x in x_min..=x_max {
         let pt = Point { x, y };
-        if is_covered(&readings, pt) {
-            if readings
+        if is_covered(&readings, pt)
+            && !readings
                 .iter()
-                .find(|r| r.sensor.dist(pt) == 0 || r.beacon.dist(pt) == 0)
-                .is_none()
-            {
-                count += 1;
-            }
+                .any(|r| r.sensor.dist(pt) == 0 || r.beacon.dist(pt) == 0)
+        {
+            count += 1;
         }
     }
 

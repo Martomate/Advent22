@@ -52,12 +52,13 @@ fn new_tail_pos(head: &Pos, tail: Pos) -> Pos {
             dy = 0;
         }
 
-        return Pos {
+        Pos {
             x: tail.x + dx,
             y: tail.y + dy,
-        };
+        }
+    } else {
+        tail
     }
-    return tail;
 }
 
 fn main() {
@@ -68,7 +69,7 @@ fn main() {
     let stdin = io::stdin();
     for l in stdin.lock().lines() {
         let line = l.unwrap();
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 
@@ -90,7 +91,7 @@ fn main() {
     let mut knots: [Pos; 10] = [Pos { x: 0, y: 0 }; 10];
 
     let mut tail_history: Vec<Pos> = Vec::new();
-    tail_history.push(knots[knots.len() - 1].clone());
+    tail_history.push(knots[knots.len() - 1]);
 
     for motion in motions {
         for _ in 0..motion.steps {
@@ -100,7 +101,7 @@ fn main() {
                 knots[i] = new_tail_pos(&knots[i - 1], knots[i]);
             }
 
-            tail_history.push(knots[knots.len() - 1].clone());
+            tail_history.push(knots[knots.len() - 1]);
         }
     }
 

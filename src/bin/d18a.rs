@@ -39,9 +39,9 @@ struct Model {
 }
 
 impl Model {
-    fn from_pixels(pixels: Vec<Point>) -> Model {
+    fn from_pixels(pixels: &[Point]) -> Model {
         return Model {
-            pixels: HashSet::from_iter(pixels.iter().map(|p| p.clone())),
+            pixels: HashSet::from_iter(pixels.iter().copied()),
         };
     }
 
@@ -65,7 +65,7 @@ fn main() {
     for l in stdin.lock().lines() {
         let line = l.unwrap();
 
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 
@@ -80,7 +80,7 @@ fn main() {
 fn run_program(lines: Vec<String>) -> u32 {
     let pixels = parse_input(lines);
 
-    let model = Model::from_pixels(pixels);
+    let model = Model::from_pixels(&pixels);
 
     model.calculate_surface_area()
 }

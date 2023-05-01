@@ -87,7 +87,7 @@ fn main() {
     let stdin = io::stdin();
     for l in stdin.lock().lines() {
         let line = l.unwrap();
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 
@@ -105,7 +105,7 @@ fn main() {
                     'E' => 'z',
                     c => c,
                 })
-                .map(|c| c as u8 - 'a' as u8)
+                .map(|c| c as u8 - b'a')
                 .collect(),
         );
     }

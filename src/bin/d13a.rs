@@ -7,14 +7,14 @@ use std::{
 
 enum Node {
     Int(u32),
-    List(Vec<Box<Node>>),
+    List(Vec<Node>),
 }
 
 fn compare(left: &Node, right: &Node) -> i32 {
     match (left, right) {
         (Node::Int(l), Node::Int(r)) => *l as i32 - *r as i32,
-        (Node::Int(num), _) => compare(&Node::List(vec![Box::from(Node::Int(*num))]), right),
-        (_, Node::Int(num)) => compare(left, &Node::List(vec![Box::from(Node::Int(*num))])),
+        (Node::Int(num), _) => compare(&Node::List(vec![Node::Int(*num)]), right),
+        (_, Node::Int(num)) => compare(left, &Node::List(vec![Node::Int(*num)])),
         (Node::List(ls), Node::List(rs)) => {
             let llen = ls.len();
             let rlen = rs.len();
@@ -44,29 +44,24 @@ impl Display for Node {
     }
 }
 
-fn parse_list(line: &mut Chars) -> Vec<Box<Node>> {
-    let mut nodes: Vec<Box<Node>> = Vec::new();
-    loop {
-        match parse_node(line) {
-            (Some(node), last_char) => {
-                nodes.push(Box::from(node));
+fn parse_list(line: &mut Chars) -> Vec<Node> {
+    let mut nodes: Vec<Node> = Vec::new();
+    while let (Some(node), last_char) = parse_node(line) {
+        nodes.push(node);
 
-                if let Some(last) = last_char {
-                    match last {
-                        ',' => continue,
-                        ']' => break,
-                        _ => panic!("What??"),
-                    }
-                }
+        if let Some(last) = last_char {
+            match last {
+                ',' => continue,
+                ']' => break,
+                _ => panic!("What??"),
             }
-            (None, _) => break,
         }
     }
-    return nodes;
+    nodes
 }
 
 fn is_digit(c: char) -> bool {
-    return c as u8 >= '0' as u8 && c as u8 <= '9' as u8;
+    c as u8 >= b'0' && c as u8 <= b'9'
 }
 
 fn parse_node(line: &mut Chars) -> (Option<Node>, Option<char>) {
@@ -89,7 +84,7 @@ fn parse_node(line: &mut Chars) -> (Option<Node>, Option<char>) {
         }
     }
 
-    return (None, None);
+    (None, None)
 }
 
 fn main() {
@@ -103,8 +98,8 @@ fn main() {
     for line in stdin.lock().lines() {
         let l = line.unwrap();
 
-        if l.len() == 0 {
-            if nodes.len() == 0 {
+        if l.is_empty() {
+            if nodes.is_empty() {
                 break;
             } else {
                 let ln = parse_node(&mut nodes[0].chars()).0.unwrap();
@@ -119,9 +114,8 @@ fn main() {
 
     let mut total = 0;
 
-    for i in 0..pairs.len() {
-        let p = &pairs[i];
-        if compare(&p.0, &p.1) < 0 {
+    for (i, (l, r)) in pairs.iter().enumerate() {
+        if compare(l, r) < 0 {
             total += i + 1;
         }
     }

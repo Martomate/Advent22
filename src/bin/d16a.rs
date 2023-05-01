@@ -49,7 +49,7 @@ struct GraphState {
 }
 
 fn find_max_volume(
-    graph: &Vec<Node>,
+    graph: &[Node],
     graph_state: &mut GraphState,
     node_idx: usize,
     prev_idx: usize,
@@ -142,15 +142,15 @@ fn find_max_volume_for_input(input: Vec<String>) -> u32 {
     }
     let start_node_idx = name_table["AA"];
     graph_state.flow_left = graph.iter().map(|v| v.flow_rate).sum();
-    let result = find_max_volume(
+    
+    find_max_volume(
         &graph,
         &mut graph_state,
         start_node_idx,
         start_node_idx,
         0,
         30,
-    );
-    result
+    )
 }
 
 fn read_input() -> Vec<String> {
@@ -158,7 +158,7 @@ fn read_input() -> Vec<String> {
     let mut lines: Vec<String> = Vec::new();
     for l in stdin.lock().lines() {
         let line = l.unwrap();
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
         lines.push(line);

@@ -98,7 +98,6 @@ fn parse_wind_list(line: String) -> Result<Vec<WindDirection>, String> {
             _ => Err(format!("invalid wind direction: {}", c)),
         })
         .collect::<Result<Vec<_>, _>>()
-        .map_err(|err| err.to_string())
 }
 
 struct Board {

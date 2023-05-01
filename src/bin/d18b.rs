@@ -42,10 +42,10 @@ struct Model {
 }
 
 impl Model {
-    fn from_pixels(pixels: Vec<Point>) -> Model {
+    fn from_pixels(pixels: &[Point]) -> Model {
         Model {
-            pixels: HashSet::from_iter(pixels.iter().map(|p| p.clone())),
-            exterior: Model::calculate_exterior(&pixels),
+            pixels: HashSet::from_iter(pixels.iter().copied()),
+            exterior: Model::calculate_exterior(pixels),
         }
     }
 
@@ -56,7 +56,7 @@ impl Model {
             .count() as u32
     }
 
-    fn calculate_exterior(pixels: &Vec<Point>) -> HashSet<Point> {
+    fn calculate_exterior(pixels: &[Point]) -> HashSet<Point> {
         let xlo = pixels.iter().map(|p| p.x).min().unwrap() - 1;
         let ylo = pixels.iter().map(|p| p.y).min().unwrap() - 1;
         let zlo = pixels.iter().map(|p| p.z).min().unwrap() - 1;
@@ -66,7 +66,7 @@ impl Model {
 
         let mut exterior = HashSet::<Point>::new();
         let mut q: Queue<Point> = Queue::new();
-        for (x, y, z) in vec![
+        for (x, y, z) in [
             (xlo, ylo, zlo),
             (xhi, ylo, zlo),
             (xlo, yhi, zlo),
@@ -74,8 +74,7 @@ impl Model {
             (xhi, yhi, zlo),
             (xhi, ylo, zhi),
             (xlo, yhi, zhi),
-            (xhi, yhi, zhi),
-        ] {
+            (xhi, yhi, zhi)] {
             let p = Point { x, y, z };
             exterior.insert(p);
             q.add(p).unwrap();
@@ -109,7 +108,7 @@ fn main() {
     for l in stdin.lock().lines() {
         let line = l.unwrap();
 
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 
@@ -124,7 +123,7 @@ fn main() {
 fn run_program(lines: Vec<String>) -> u32 {
     let pixels = parse_input(lines);
 
-    let model = Model::from_pixels(pixels);
+    let model = Model::from_pixels(&pixels);
 
     model.calculate_surface_area()
 }

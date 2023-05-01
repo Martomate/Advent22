@@ -13,8 +13,8 @@ enum ParsedOp {
 impl ParsedOp {
     fn create_two_op(l: &str, r: &str, ops_map: &HashMap<&str, ParsedOp>) -> Option<(Op, Op)> {
         if let (Some(l), Some(r)) = (
-            ParsedOp::create_op(l, &ops_map),
-            ParsedOp::create_op(r, &ops_map),
+            ParsedOp::create_op(l, ops_map),
+            ParsedOp::create_op(r, ops_map),
         ) {
             Some((l, r))
         } else {
@@ -28,13 +28,13 @@ impl ParsedOp {
         match op {
             ParsedOp::Human => Some(Op::Human),
             ParsedOp::Const(c) => Some(Op::Const(*c)),
-            ParsedOp::Add(l, r) => ParsedOp::create_two_op(l, r, &ops_map)
+            ParsedOp::Add(l, r) => ParsedOp::create_two_op(l, r, ops_map)
                 .map(|(l, r)| Op::Add(Box::new(l), Box::new(r))),
-            ParsedOp::Sub(l, r) => ParsedOp::create_two_op(l, r, &ops_map)
+            ParsedOp::Sub(l, r) => ParsedOp::create_two_op(l, r, ops_map)
                 .map(|(l, r)| Op::Sub(Box::new(l), Box::new(r))),
-            ParsedOp::Mul(l, r) => ParsedOp::create_two_op(l, r, &ops_map)
+            ParsedOp::Mul(l, r) => ParsedOp::create_two_op(l, r, ops_map)
                 .map(|(l, r)| Op::Mul(Box::new(l), Box::new(r))),
-            ParsedOp::Div(l, r) => ParsedOp::create_two_op(l, r, &ops_map)
+            ParsedOp::Div(l, r) => ParsedOp::create_two_op(l, r, ops_map)
                 .map(|(l, r)| Op::Div(Box::new(l), Box::new(r))),
         }
     }
@@ -151,7 +151,7 @@ fn parse_input(input: &str) -> HashMap<&str, ParsedOp> {
                 }
             }
         };
-        named_ops.insert(&name, parsed_op);
+        named_ops.insert(name, parsed_op);
     }
 
     named_ops
@@ -161,7 +161,7 @@ fn run_program(part2: bool, big: bool) -> i64 {
     let input = load_example(big);
     let mut ops_map = parse_input(input);
     if part2 {
-        ops_map.insert(&"humn", ParsedOp::Human);
+        ops_map.insert("humn", ParsedOp::Human);
         ops_map.insert("root", match ops_map.get("root").unwrap() {
             ParsedOp::Add(l, r) => ParsedOp::Sub(l.clone(), r.clone()),
             ParsedOp::Sub(l, r) => ParsedOp::Sub(l.clone(), r.clone()),
@@ -183,9 +183,9 @@ fn run_program(part2: bool, big: bool) -> i64 {
 
 fn load_example(big: bool) -> &'static str {
     if big {
-        return include_str!("d21_ex_2.txt");
+        include_str!("d21_ex_2.txt")
     } else {
-        return include_str!("d21_ex_1.txt");
+        include_str!("d21_ex_1.txt")
     }
 }
 

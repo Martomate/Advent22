@@ -9,14 +9,14 @@ use std::{
 #[derive(PartialEq, Eq)]
 enum Node {
     Int(u32),
-    List(Vec<Box<Node>>),
+    List(Vec<Node>),
 }
 
 fn compare(left: &Node, right: &Node) -> Ordering {
     match (left, right) {
         (Node::Int(l), Node::Int(r)) => l.cmp(r),
-        (Node::Int(num), _) => compare(&Node::List(vec![Box::from(Node::Int(*num))]), right),
-        (_, Node::Int(num)) => compare(left, &Node::List(vec![Box::from(Node::Int(*num))])),
+        (Node::Int(num), _) => compare(&Node::List(vec![Node::Int(*num)]), right),
+        (_, Node::Int(num)) => compare(left, &Node::List(vec![Node::Int(*num)])),
         (Node::List(ls), Node::List(rs)) => {
             let llen = ls.len();
             let rlen = rs.len();
@@ -46,29 +46,24 @@ impl Display for Node {
     }
 }
 
-fn parse_list(line: &mut Chars) -> Vec<Box<Node>> {
-    let mut nodes: Vec<Box<Node>> = Vec::new();
-    loop {
-        match parse_node(line) {
-            (Some(node), last_char) => {
-                nodes.push(Box::from(node));
+fn parse_list(line: &mut Chars) -> Vec<Node> {
+    let mut nodes: Vec<Node> = Vec::new();
+    while let (Some(node), last_char) = parse_node(line) {
+        nodes.push(node);
 
-                if let Some(last) = last_char {
-                    match last {
-                        ',' => continue,
-                        ']' => break,
-                        _ => panic!("What??"),
-                    }
-                }
+        if let Some(last) = last_char {
+            match last {
+                ',' => continue,
+                ']' => break,
+                _ => panic!("What??"),
             }
-            (None, _) => break,
         }
     }
-    return nodes;
+    nodes
 }
 
 fn is_digit(c: char) -> bool {
-    return c as u8 >= '0' as u8 && c as u8 <= '9' as u8;
+    c as u8 >= b'0' && c as u8 <= b'9'
 }
 
 fn parse_node(line: &mut Chars) -> (Option<Node>, Option<char>) {
@@ -91,7 +86,7 @@ fn parse_node(line: &mut Chars) -> (Option<Node>, Option<char>) {
         }
     }
 
-    return (None, None);
+    (None, None)
 }
 
 fn main() {
@@ -105,7 +100,7 @@ fn main() {
     for line in stdin.lock().lines() {
         let l = line.unwrap();
 
-        if l.len() == 0 {
+        if l.is_empty() {
             if last_line_empty {
                 break;
             }
@@ -116,26 +111,20 @@ fn main() {
         }
     }
 
-    nodes.push(Node::List(vec![Box::from(Node::List(vec![Box::from(
-        Node::Int(2),
-    )]))]));
-    nodes.push(Node::List(vec![Box::from(Node::List(vec![Box::from(
-        Node::Int(6),
-    )]))]));
+    nodes.push(Node::List(vec![Node::List(vec![Node::Int(2)])]));
+    nodes.push(Node::List(vec![Node::List(vec![Node::Int(6)])]));
 
     nodes.sort_by(compare);
 
     let mut idx2 = 0;
     let mut idx6 = 0;
 
-    for i in 0..nodes.len() {
-        let node = &nodes[i];
-
-        if *node == Node::List(vec![Box::from(Node::List(vec![Box::from(Node::Int(2))]))]) {
+    for (i, node) in nodes.iter().enumerate() {
+        if *node == Node::List(vec![Node::List(vec![Node::Int(2)])]) {
             idx2 = i;
         }
 
-        if *node == Node::List(vec![Box::from(Node::List(vec![Box::from(Node::Int(6))]))]) {
+        if *node == Node::List(vec![Node::List(vec![Node::Int(6)])]) {
             idx6 = i;
         }
     }

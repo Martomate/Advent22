@@ -40,14 +40,14 @@ fn parse_line(line: String) -> SensorReading {
     }
 }
 
-fn find_hole(readings: &Vec<SensorReading>, search_width: i32) -> Option<Point> {
+fn find_hole(readings: &[SensorReading], search_width: i32) -> Option<Point> {
     for y in 0..=4000000 {
         let mut xs = readings
             .iter()
             .map(|r| {
                 let dx = r.range() as i32 - r.sensor.y.abs_diff(y) as i32;
-                let x_min = r.sensor.x - dx as i32;
-                let x_max = r.sensor.x + dx as i32;
+                let x_min = r.sensor.x - dx;
+                let x_max = r.sensor.x + dx;
                 (x_min, x_max)
             })
             .collect::<Vec<_>>();
@@ -66,7 +66,7 @@ fn find_hole(readings: &Vec<SensorReading>, search_width: i32) -> Option<Point> 
             }
         }
     }
-    return None;
+    None
 }
 
 fn main() {
@@ -75,7 +75,7 @@ fn main() {
     for l in io::stdin().lock().lines() {
         let line = l.unwrap();
 
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
 

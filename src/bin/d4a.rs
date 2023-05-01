@@ -21,7 +21,7 @@ fn parse_section(s: &str) -> Option<Section> {
     }
 }
 
-fn parse_sections(s: &String) -> Option<(Section, Section)> {
+fn parse_sections(s: &str) -> Option<(Section, Section)> {
     match s.split_once(',') {
         Some((l, r)) => match (parse_section(l), parse_section(r)) {
             (Some(ls), Some(rs)) => Some((ls, rs)),
