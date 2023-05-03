@@ -44,67 +44,90 @@ enum Direction {
 
 impl Direction {
     fn opposite(self) -> Direction {
+        use Direction::*;
+
         match self {
-            Direction::Down => Direction::Up,
-            Direction::Up => Direction::Down,
-            Direction::Right => Direction::Left,
-            Direction::Left => Direction::Right,
+            Down => Up,
+            Up => Down,
+            Right => Left,
+            Left => Right,
         }
     }
 
     fn turn_cw(self) -> Direction {
+        use Direction::*;
+
         match self {
-            Direction::Down => Direction::Left,
-            Direction::Up => Direction::Right,
-            Direction::Right => Direction::Down,
-            Direction::Left => Direction::Up,
+            Down => Left,
+            Up => Right,
+            Right => Down,
+            Left => Up,
         }
     }
 
     fn turn_ccw(self) -> Direction {
+        use Direction::*;
+
         match self {
-            Direction::Down => Direction::Right,
-            Direction::Up => Direction::Left,
-            Direction::Right => Direction::Up,
-            Direction::Left => Direction::Down,
+            Down => Right,
+            Up => Left,
+            Right => Up,
+            Left => Down,
         }
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct Position {
+struct Player {
     x: i32,
     y: i32,
     dir: Direction,
 }
 
-impl Position {
-    fn new(x: i32, y: i32, dir: Direction) -> Position {
-        Position { x, y, dir }
+impl Player {
+    fn new(x: i32, y: i32, dir: Direction) -> Player {
+        Player { x, y, dir }
     }
 
-    fn after_move(&self) -> Position {
+    fn after_move(&self) -> Player {
         match self.dir {
-            Direction::Down => Position {
-                x: self.x,
+            Direction::Down => Player {
                 y: self.y + 1,
-                dir: self.dir,
+                ..*self
             },
-            Direction::Up => Position {
-                x: self.x,
+            Direction::Up => Player {
                 y: self.y - 1,
-                dir: self.dir,
+                ..*self
             },
-            Direction::Right => Position {
+            Direction::Right => Player {
                 x: self.x + 1,
-                y: self.y,
-                dir: self.dir,
+                ..*self
             },
-            Direction::Left => Position {
+            Direction::Left => Player {
                 x: self.x - 1,
-                y: self.y,
-                dir: self.dir,
+                ..*self
             },
+        }
+    }
+
+    fn after_cw_turn(&self) -> Self {
+        Player {
+            dir: self.dir.turn_cw(),
+            ..*self
+        }
+    }
+
+    fn after_ccw_turn(&self) -> Self {
+        Player {
+            dir: self.dir.turn_ccw(),
+            ..*self
+        }
+    }
+
+    fn after_u_turn(&self) -> Self {
+        Player {
+            dir: self.dir.opposite(),
+            ..*self
         }
     }
 }
@@ -133,57 +156,49 @@ impl Board {
         }
     }
 
-    fn walk(&self, start: Position, steps: Vec<Instruction>) -> Position {
+    fn walk(&self, start: Player, steps: Vec<Instruction>) -> Player {
         let mut here = start;
-        println!("{:?}", here);
         for step in steps {
             here = self.perform(here, step);
-            println!("{:?}", here);
         }
         here
     }
 
-    fn perform(&self, start: Position, step: Instruction) -> Position {
-        let mut here = start;
+    fn move_one_step(&self, here: Player) -> Player {
+        let next = here.after_move();
+        match self.lookup(next.x, next.y) {
+            SpaceContent::Ground => next,
+            SpaceContent::Stone => here,
+            SpaceContent::Empty => {
+                let mut p = here.after_u_turn();
+                loop {
+                    let n = p.after_move();
+                    if self.lookup(n.x, n.y) == SpaceContent::Empty {
+                        break;
+                    }
+                    p = n;
+                }
+                if self.rows[p.y as usize][p.x as usize] == SpaceContent::Ground {
+                    Player { dir: here.dir, ..p }
+                } else {
+                    here
+                }
+            }
+        }
+    }
+
+    fn perform(&self, start: Player, step: Instruction) -> Player {
         match step {
             Instruction::Move(d) => {
+                let mut here = start;
                 for _ in 0..d {
-                    let next = here.after_move();
-                    let content = self.lookup(next.x, next.y);
-                    if content == SpaceContent::Ground {
-                        here = next;
-                    } else if content == SpaceContent::Empty {
-                        let mut p = Position {
-                            dir: here.dir.opposite(),
-                            ..here
-                        };
-                        loop {
-                            let n = p.after_move();
-                            if self.lookup(n.x, n.y) == SpaceContent::Empty {
-                                break;
-                            }
-                            p = n;
-                        }
-                        if self.rows[p.y as usize][p.x as usize] == SpaceContent::Ground {
-                            here = Position { dir: here.dir, ..p };
-                        }
-                    }
+                    here = self.move_one_step(here);
                 }
+                here
             }
-            Instruction::TurnLeft => {
-                here = Position {
-                    dir: here.dir.turn_ccw(),
-                    ..here
-                }
-            }
-            Instruction::TurnRight => {
-                here = Position {
-                    dir: here.dir.turn_cw(),
-                    ..here
-                }
-            }
-        };
-        here
+            Instruction::TurnLeft => start.after_ccw_turn(),
+            Instruction::TurnRight => start.after_cw_turn(),
+        }
     }
 }
 
@@ -206,7 +221,7 @@ impl From<Vec<&str>> for Board {
     }
 }
 
-fn score(pos: Position) -> u32 {
+fn score(pos: Player) -> u32 {
     let dir_num = match pos.dir {
         Direction::Right => 0,
         Direction::Down => 1,
@@ -216,7 +231,7 @@ fn score(pos: Position) -> u32 {
     (pos.y + 1) as u32 * 1000 + (pos.x + 1) as u32 * 4 + dir_num
 }
 
-fn parse_input(input: Vec<&str>) -> (Board, Vec<Instruction>) {
+fn parse_input(input: &[&str]) -> (Board, Vec<Instruction>) {
     let mut lines: Vec<&str> = Vec::new();
     let mut board_done = false;
     let mut steps: Option<&str> = None;
@@ -240,9 +255,9 @@ fn parse_input(input: Vec<&str>) -> (Board, Vec<Instruction>) {
 fn run_program(input: Vec<&str>) -> u32 {
     let start_x = input[0].find(|c| c == '.').unwrap();
     println!("{}", input[0]);
-    let (board, instructions) = parse_input(input);
+    let (board, instructions) = parse_input(&input);
 
-    let start_pos = Position::new(start_x as i32, 0, Direction::Right);
+    let start_pos = Player::new(start_x as i32, 0, Direction::Right);
     let end_pos = board.walk(start_pos, instructions);
 
     score(end_pos)
@@ -331,20 +346,20 @@ mod tests {
     fn board_walk_handles_a_single_move_on_ground() {
         let board = Board::from(vec!["...", "...", "..."]);
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Right), Instruction::Move(1)),
-            Position::new(2, 1, Direction::Right)
+            board.perform(Player::new(1, 1, Direction::Right), Instruction::Move(1)),
+            Player::new(2, 1, Direction::Right)
         );
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Left), Instruction::Move(1)),
-            Position::new(0, 1, Direction::Left)
+            board.perform(Player::new(1, 1, Direction::Left), Instruction::Move(1)),
+            Player::new(0, 1, Direction::Left)
         );
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Down), Instruction::Move(1)),
-            Position::new(1, 2, Direction::Down)
+            board.perform(Player::new(1, 1, Direction::Down), Instruction::Move(1)),
+            Player::new(1, 2, Direction::Down)
         );
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Up), Instruction::Move(1)),
-            Position::new(1, 0, Direction::Up)
+            board.perform(Player::new(1, 1, Direction::Up), Instruction::Move(1)),
+            Player::new(1, 0, Direction::Up)
         );
     }
 
@@ -352,20 +367,20 @@ mod tests {
     fn board_walk_handles_multiple_moves_on_ground() {
         let board = Board::from(vec![".....", ".....", ".....", ".....", "....."]);
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Right), Instruction::Move(2)),
-            Position::new(4, 2, Direction::Right)
+            board.perform(Player::new(2, 2, Direction::Right), Instruction::Move(2)),
+            Player::new(4, 2, Direction::Right)
         );
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Left), Instruction::Move(2)),
-            Position::new(0, 2, Direction::Left)
+            board.perform(Player::new(2, 2, Direction::Left), Instruction::Move(2)),
+            Player::new(0, 2, Direction::Left)
         );
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Down), Instruction::Move(2)),
-            Position::new(2, 4, Direction::Down)
+            board.perform(Player::new(2, 2, Direction::Down), Instruction::Move(2)),
+            Player::new(2, 4, Direction::Down)
         );
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Up), Instruction::Move(2)),
-            Position::new(2, 0, Direction::Up)
+            board.perform(Player::new(2, 2, Direction::Up), Instruction::Move(2)),
+            Player::new(2, 0, Direction::Up)
         );
     }
 
@@ -373,20 +388,20 @@ mod tests {
     fn board_walk_handles_a_single_move_into_stone() {
         let board = Board::from(vec![".#.", "#.#", ".#."]);
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Right), Instruction::Move(1)),
-            Position::new(1, 1, Direction::Right)
+            board.perform(Player::new(1, 1, Direction::Right), Instruction::Move(1)),
+            Player::new(1, 1, Direction::Right)
         );
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Left), Instruction::Move(1)),
-            Position::new(1, 1, Direction::Left)
+            board.perform(Player::new(1, 1, Direction::Left), Instruction::Move(1)),
+            Player::new(1, 1, Direction::Left)
         );
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Down), Instruction::Move(1)),
-            Position::new(1, 1, Direction::Down)
+            board.perform(Player::new(1, 1, Direction::Down), Instruction::Move(1)),
+            Player::new(1, 1, Direction::Down)
         );
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Up), Instruction::Move(1)),
-            Position::new(1, 1, Direction::Up)
+            board.perform(Player::new(1, 1, Direction::Up), Instruction::Move(1)),
+            Player::new(1, 1, Direction::Up)
         );
     }
 
@@ -394,20 +409,20 @@ mod tests {
     fn board_walk_handles_a_single_move_to_the_other_side_with_empty_space_around() {
         let board = Board::from(vec!["", " .. ", " .. ", ""]);
         assert_eq!(
-            board.perform(Position::new(2, 1, Direction::Right), Instruction::Move(1)),
-            Position::new(1, 1, Direction::Right)
+            board.perform(Player::new(2, 1, Direction::Right), Instruction::Move(1)),
+            Player::new(1, 1, Direction::Right)
         );
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Left), Instruction::Move(1)),
-            Position::new(2, 1, Direction::Left)
+            board.perform(Player::new(1, 1, Direction::Left), Instruction::Move(1)),
+            Player::new(2, 1, Direction::Left)
         );
         assert_eq!(
-            board.perform(Position::new(1, 2, Direction::Down), Instruction::Move(1)),
-            Position::new(1, 1, Direction::Down)
+            board.perform(Player::new(1, 2, Direction::Down), Instruction::Move(1)),
+            Player::new(1, 1, Direction::Down)
         );
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Up), Instruction::Move(1)),
-            Position::new(1, 2, Direction::Up)
+            board.perform(Player::new(1, 1, Direction::Up), Instruction::Move(1)),
+            Player::new(1, 2, Direction::Up)
         );
     }
 
@@ -415,20 +430,20 @@ mod tests {
     fn board_walk_handles_a_single_move_to_the_other_side_without_empty_space_around() {
         let board = Board::from(vec!["..", ".."]);
         assert_eq!(
-            board.perform(Position::new(1, 0, Direction::Right), Instruction::Move(1)),
-            Position::new(0, 0, Direction::Right)
+            board.perform(Player::new(1, 0, Direction::Right), Instruction::Move(1)),
+            Player::new(0, 0, Direction::Right)
         );
         assert_eq!(
-            board.perform(Position::new(0, 0, Direction::Left), Instruction::Move(1)),
-            Position::new(1, 0, Direction::Left)
+            board.perform(Player::new(0, 0, Direction::Left), Instruction::Move(1)),
+            Player::new(1, 0, Direction::Left)
         );
         assert_eq!(
-            board.perform(Position::new(0, 1, Direction::Down), Instruction::Move(1)),
-            Position::new(0, 0, Direction::Down)
+            board.perform(Player::new(0, 1, Direction::Down), Instruction::Move(1)),
+            Player::new(0, 0, Direction::Down)
         );
         assert_eq!(
-            board.perform(Position::new(0, 0, Direction::Up), Instruction::Move(1)),
-            Position::new(0, 1, Direction::Up)
+            board.perform(Player::new(0, 0, Direction::Up), Instruction::Move(1)),
+            Player::new(0, 1, Direction::Up)
         );
     }
 
@@ -436,20 +451,20 @@ mod tests {
     fn board_walk_handles_a_single_move_to_the_other_side_into_stone() {
         let board = Board::from(vec!["", " .# ", " #. ", ""]);
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Right), Instruction::Move(1)),
-            Position::new(2, 2, Direction::Right)
+            board.perform(Player::new(2, 2, Direction::Right), Instruction::Move(1)),
+            Player::new(2, 2, Direction::Right)
         );
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Left), Instruction::Move(1)),
-            Position::new(1, 1, Direction::Left)
+            board.perform(Player::new(1, 1, Direction::Left), Instruction::Move(1)),
+            Player::new(1, 1, Direction::Left)
         );
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Down), Instruction::Move(1)),
-            Position::new(2, 2, Direction::Down)
+            board.perform(Player::new(2, 2, Direction::Down), Instruction::Move(1)),
+            Player::new(2, 2, Direction::Down)
         );
         assert_eq!(
-            board.perform(Position::new(1, 1, Direction::Up), Instruction::Move(1)),
-            Position::new(1, 1, Direction::Up)
+            board.perform(Player::new(1, 1, Direction::Up), Instruction::Move(1)),
+            Player::new(1, 1, Direction::Up)
         );
     }
 
@@ -457,65 +472,68 @@ mod tests {
     fn board_walk_handles_left_turn() {
         let board = Board::from(vec![".....", ".....", ".....", ".....", "....."]);
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Right), Instruction::TurnLeft),
-            Position::new(2, 2, Direction::Up)
+            board.perform(Player::new(2, 2, Direction::Right), Instruction::TurnLeft),
+            Player::new(2, 2, Direction::Up)
         );
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Left), Instruction::TurnLeft),
-            Position::new(2, 2, Direction::Down)
+            board.perform(Player::new(2, 2, Direction::Left), Instruction::TurnLeft),
+            Player::new(2, 2, Direction::Down)
         );
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Down), Instruction::TurnLeft),
-            Position::new(2, 2, Direction::Right)
+            board.perform(Player::new(2, 2, Direction::Down), Instruction::TurnLeft),
+            Player::new(2, 2, Direction::Right)
         );
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Up), Instruction::TurnLeft),
-            Position::new(2, 2, Direction::Left)
+            board.perform(Player::new(2, 2, Direction::Up), Instruction::TurnLeft),
+            Player::new(2, 2, Direction::Left)
         );
     }
 
     #[test]
     fn score_uses_1_indexing() {
-        assert_eq!(score(Position::new(0, 0, Direction::Right)), 1004);
-        assert_eq!(score(Position::new(0, 0, Direction::Down)), 1005);
-        assert_eq!(score(Position::new(0, 0, Direction::Left)), 1006);
-        assert_eq!(score(Position::new(0, 0, Direction::Up)), 1007);
-        
-        assert_eq!(score(Position::new(1, 0, Direction::Right)), 1008);
-        assert_eq!(score(Position::new(0, 1, Direction::Right)), 2004);
+        assert_eq!(score(Player::new(0, 0, Direction::Right)), 1004);
+        assert_eq!(score(Player::new(0, 0, Direction::Down)), 1005);
+        assert_eq!(score(Player::new(0, 0, Direction::Left)), 1006);
+        assert_eq!(score(Player::new(0, 0, Direction::Up)), 1007);
+
+        assert_eq!(score(Player::new(1, 0, Direction::Right)), 1008);
+        assert_eq!(score(Player::new(0, 1, Direction::Right)), 2004);
     }
 
     #[test]
     fn board_walk_handles_right_turn() {
         let board = Board::from(vec![".....", ".....", ".....", ".....", "....."]);
         assert_eq!(
-            board.perform(
-                Position::new(2, 2, Direction::Right),
-                Instruction::TurnRight
-            ),
-            Position::new(2, 2, Direction::Down)
+            board.perform(Player::new(2, 2, Direction::Right), Instruction::TurnRight),
+            Player::new(2, 2, Direction::Down)
         );
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Left), Instruction::TurnRight),
-            Position::new(2, 2, Direction::Up)
+            board.perform(Player::new(2, 2, Direction::Left), Instruction::TurnRight),
+            Player::new(2, 2, Direction::Up)
         );
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Down), Instruction::TurnRight),
-            Position::new(2, 2, Direction::Left)
+            board.perform(Player::new(2, 2, Direction::Down), Instruction::TurnRight),
+            Player::new(2, 2, Direction::Left)
         );
         assert_eq!(
-            board.perform(Position::new(2, 2, Direction::Up), Instruction::TurnRight),
-            Position::new(2, 2, Direction::Right)
+            board.perform(Player::new(2, 2, Direction::Up), Instruction::TurnRight),
+            Player::new(2, 2, Direction::Right)
         );
     }
 
     #[test]
     fn small_example_should_work() {
-        assert_eq!(run_program(include_str!("d22_ex_1.txt").split('\n').collect()), 6032);
+        assert_eq!(
+            run_program(include_str!("d22_ex_1.txt").split('\n').collect()),
+            6032
+        );
     }
 
     #[test]
     fn big_example_should_work() {
-        assert_eq!(run_program(include_str!("d22_ex_2.txt").split('\n').collect()), 117102);
+        assert_eq!(
+            run_program(include_str!("d22_ex_2.txt").split('\n').collect()),
+            117102
+        );
     }
 }
