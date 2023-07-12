@@ -3,7 +3,7 @@
 version = 3
 
 [[package]]
-name = "Advent22"
+name = "advent22"
 version = "0.1.0"
 dependencies = [
  "bit-set",
