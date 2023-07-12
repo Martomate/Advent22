@@ -14,9 +14,9 @@ mod examples {
 
     pub fn example_input(use_example_2: bool) -> &'static str {
         if use_example_2 {
-            include_str!("d20_ex_2.txt")
+            include_str!("ex2.txt")
         } else {
-            include_str!("d20_ex_1.txt")
+            include_str!("ex1.txt")
         }
     }
 }

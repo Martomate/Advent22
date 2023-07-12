@@ -524,7 +524,7 @@ mod tests {
     #[test]
     fn small_example_should_work() {
         assert_eq!(
-            run_program(include_str!("d22_ex_1.txt").split('\n').collect()),
+            run_program(include_str!("ex1.txt").split('\n').collect()),
             6032
         );
     }
@@ -532,7 +532,7 @@ mod tests {
     #[test]
     fn big_example_should_work() {
         assert_eq!(
-            run_program(include_str!("d22_ex_2.txt").split('\n').collect()),
+            run_program(include_str!("ex2.txt").split('\n').collect()),
             117102
         );
     }

@@ -183,9 +183,9 @@ fn run_program(part2: bool, big: bool) -> i64 {
 
 fn load_example(big: bool) -> &'static str {
     if big {
-        include_str!("d21_ex_2.txt")
+        include_str!("ex2.txt")
     } else {
-        include_str!("d21_ex_1.txt")
+        include_str!("ex1.txt")
     }
 }
 
