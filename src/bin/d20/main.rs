@@ -1,156 +1,85 @@
-use std::{env, process::exit};
+mod crypto;
 
-const DECRYPTION_KEY: i64 = 811589153;
-
-mod examples {
-    use std::num::ParseIntError;
-
-    pub fn parse_input(input: &str) -> Result<Vec<i64>, ParseIntError> {
-        input
-            .split('\n')
-            .map(|l| l.parse::<i64>())
-            .collect()
-    }
-
-    pub fn example_input(use_example_2: bool) -> &'static str {
-        if use_example_2 {
-            include_str!("ex2.txt")
-        } else {
-            include_str!("ex1.txt")
-        }
-    }
-}
-
-mod crypto {
-    use std::cmp::Ordering;
-
-    /// for each element x: count x steps forward (looping around if needed), remove x, insert x after the new position
-    pub fn mix(seq: Vec<i64>, rounds: u32) -> Vec<i64> {
-        let seq_len = seq.len() as i64;
-
-        let mut res: Vec<i64> = seq.clone();
-
-        // idx[i] is the index of seq[i] in res
-        let mut res_idx: Vec<usize> = (0..seq.len()).collect();
-
-        // inv_idx[i] is the index of res[i] in seq
-        let mut seq_idx: Vec<usize> = (0..seq.len()).collect();
-
-        for _ in 0..rounds {
-            for n in 0..seq.len() {
-                let src = res_idx[n];
-                let here = res[src];
-
-                let dest = src as i64 + here % (seq_len - 1);
-                let dest = (dest + (seq_len - 1)) % (seq_len - 1);
-                let dest = dest as usize;
-
-                match dest.cmp(&src) {
-                    Ordering::Equal => continue,
-                    Ordering::Greater => {
-                        for i in (src + 1)..=dest {
-                            res_idx[seq_idx[i]] -= 1;
-                        }
-                        res_idx[seq_idx[src]] = dest;
-
-                        for i in (src + 1)..=dest {
-                            res[i - 1] = res[i];
-                            seq_idx[i - 1] = seq_idx[i];
-                        }
-                        res[dest] = here;
-                        seq_idx[dest] = n;
-                    }
-                    Ordering::Less => {
-                        for i in dest..src {
-                            res_idx[seq_idx[i]] += 1;
-                        }
-                        res_idx[seq_idx[src]] = dest;
-
-                        for i in (dest..src).rev() {
-                            res[i + 1] = res[i];
-                            seq_idx[i + 1] = seq_idx[i];
-                        }
-                        res[dest] = here;
-                        seq_idx[dest] = n;
-                    }
-                };
-            }
-        }
-
-        res
-    }
-
-    pub fn decrypt(seq: Vec<i64>, decryption_key: i64, rounds: u32) -> i64 {
-        let mixed = mix(seq.iter().map(|n| n * decryption_key).collect(), rounds);
-
-        let zero_pos = mixed.iter().position(|&n| n == 0).unwrap();
-
-        let res1 = mixed[(zero_pos + 1000) % mixed.len()];
-        let res2 = mixed[(zero_pos + 2000) % mixed.len()];
-        let res3 = mixed[(zero_pos + 3000) % mixed.len()];
-
-        res1 + res2 + res3
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use crate::{
-            crypto::*,
-            examples::{example_input, parse_input},
-        };
-
-        #[test]
-        fn decrypting_small_example_works_part_1() {
-            let seq = parse_input(example_input(false)).unwrap();
-
-            assert_eq!(decrypt(seq, 1, 1), 3);
-        }
-
-        #[test]
-        fn decrypting_big_example_works_part_1() {
-            let seq = parse_input(example_input(true)).unwrap();
-
-            assert_eq!(decrypt(seq, 1, 1), 11037);
-        }
-
-        #[test]
-        fn decrypting_small_example_works_part_2() {
-            let seq = parse_input(example_input(false)).unwrap();
-
-            assert_eq!(decrypt(seq, crate::DECRYPTION_KEY, 10), 1623178306);
-        }
-
-        #[test]
-        fn decrypting_big_example_works_part_2() {
-            let seq = parse_input(example_input(true)).unwrap();
-
-            assert_eq!(decrypt(seq, crate::DECRYPTION_KEY, 10), 3033720253914);
-        }
-    }
-}
+use clap::{Parser, ValueEnum};
+use std::num::ParseIntError;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let cli = Cli::parse();
 
-    if args.len() != 3 {
-        println!("Usage: d20 <s|b> <1|2>");
-        exit(1);
-    } else {
-        let use_example_2 = args[1] == "b";
-        let is_part_2 = args[2] == "2";
+    let res = run_example(cli.example, cli.part);
 
-        let input = examples::example_input(use_example_2);
+    println!("Result: {}", res);
+}
 
-        let seq = examples::parse_input(input).unwrap();
+#[derive(ValueEnum, Clone, PartialEq, Eq)]
+enum Example {
+    #[value(alias = "s")]
+    Small,
 
-        println!("Read {} numbers", seq.len());
+    #[value(alias = "b")]
+    Big,
+}
 
-        let res = if is_part_2 {
-            crypto::decrypt(seq, DECRYPTION_KEY, 10)
-        } else {
-            crypto::decrypt(seq, 1, 1)
-        };
+#[derive(ValueEnum, Clone, PartialEq, Eq)]
+enum Part {
+    #[value(alias = "b", alias = "1")]
+    Basic,
 
-        println!("Result: {}", res);
+    #[value(alias = "a", alias = "2")]
+    Advanced,
+}
+
+#[derive(Parser)]
+struct Cli {
+    #[arg(value_enum)]
+    example: Example,
+
+    #[arg(value_enum)]
+    part: Part,
+}
+
+fn parse_input(input: &str) -> Result<Vec<i64>, ParseIntError> {
+    input.split('\n').map(|l| l.parse::<i64>()).collect()
+}
+
+const EXAMPLE_1: &str = include_str!("ex1.txt");
+const EXAMPLE_2: &str = include_str!("ex2.txt");
+
+fn run_example(ex: Example, part: Part) -> i64 {
+    let input = match ex {
+        Example::Small => EXAMPLE_1,
+        Example::Big => EXAMPLE_2,
+    };
+
+    let seq = parse_input(input).unwrap();
+
+    match part {
+        Part::Basic => crypto::decrypt(seq, 1, 1),
+        Part::Advanced => crypto::decrypt(seq, 811589153, 10),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{run_example, Example, Part};
+
+    #[test]
+    fn part_1_small() {
+        assert_eq!(run_example(Example::Small, Part::Basic), 3);
+    }
+
+    #[test]
+    fn part_1_big() {
+        assert_eq!(run_example(Example::Big, Part::Basic), 11037);
+    }
+
+    #[test]
+    fn part_2_small() {
+        assert_eq!(run_example(Example::Small, Part::Advanced), 1623178306);
+    }
+
+    #[test]
+    fn part_2_big() {
+        assert_eq!(run_example(Example::Big, Part::Advanced), 3033720253914);
     }
 }
