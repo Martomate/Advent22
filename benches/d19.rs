@@ -45,14 +45,5 @@ fn bench_big_example_mini(c: &mut Criterion) {
     });
 }
 
-fn bench_big_example(c: &mut Criterion) {
-    let mut group = c.benchmark_group("small");
-    group.warm_up_time(Duration::from_secs(1));
-    group.sample_size(10);
-    group.bench_function("big_example", |b| {
-        b.iter(|| d19::run_program(big_example(), 24, true))
-    });
-}
-
-criterion_group!(benches, bench_mini, bench_small_example, bench_big_example_mini); //, bench_big_example);
+criterion_group!(benches, bench_mini, bench_small_example, bench_big_example_mini);
 criterion_main!(benches);
