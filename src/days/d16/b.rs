@@ -212,7 +212,7 @@ fn find_max_volume(
     max_volume
 }
 
-fn find_max_volume_for_input(input: Vec<String>) -> u32 {
+pub fn find_max_volume_for_input(input: Vec<String>) -> u32 {
     let mut parsed_lines: Vec<ParseResult> = Vec::new();
     let mut name_table: HashMap<String, usize> = HashMap::new();
 
@@ -247,7 +247,7 @@ fn find_max_volume_for_input(input: Vec<String>) -> u32 {
     )
 }
 
-fn read_input() -> Vec<String> {
+pub fn read_input() -> Vec<String> {
     let stdin = io::stdin();
     let mut lines: Vec<String> = Vec::new();
     for l in stdin.lock().lines() {
@@ -258,15 +258,6 @@ fn read_input() -> Vec<String> {
         lines.push(line);
     }
     lines
-}
-
-pub fn main() {
-    println!("Hello, world!");
-
-    let lines = read_input();
-    let result = find_max_volume_for_input(lines);
-
-    println!("{}", result);
 }
 
 #[cfg(test)]

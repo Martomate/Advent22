@@ -69,7 +69,7 @@ fn find_hole(readings: &[SensorReading], search_width: i32) -> Option<Point> {
     None
 }
 
-fn main() {
+pub fn main() {
     let mut readings: Vec<SensorReading> = Vec::new();
 
     for l in io::stdin().lock().lines() {
@@ -82,7 +82,7 @@ fn main() {
         readings.push(parse_line(line));
     }
 
-    let hole = find_hole(&readings, 4000000).unwrap();
+    let hole = find_hole(&readings, if readings.len() > 14 { 4000000 } else { 20 }).unwrap();
 
     println!("Hole: {}, {}", hole.x, hole.y);
     println!("Value: {}", hole.x as i64 * 4000000 + hole.y as i64);

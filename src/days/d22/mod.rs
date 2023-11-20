@@ -255,7 +255,7 @@ fn parse_input(input: &[&str], cube: bool) -> (Board, Vec<Instruction>) {
     (board, instructions)
 }
 
-fn run_program(input: Vec<&str>, cube: bool) -> u32 {
+pub fn run_program(input: Vec<&str>, cube: bool) -> u32 {
     let start_x = input[0].find(|c| c == '.').unwrap();
     let (board, instructions) = parse_input(&input, cube);
 
@@ -263,15 +263,6 @@ fn run_program(input: Vec<&str>, cube: bool) -> u32 {
     let end_pos = board.walk(start_pos, instructions);
 
     score(end_pos)
-}
-
-fn main() {
-    let input: Vec<String> = std::io::stdin().lines().map(|l| l.unwrap()).collect();
-    let input = input.iter().map(|s| s.as_str()).collect();
-
-    let result = run_program(input, false);
-
-    println!("Score: {}", result);
 }
 
 #[cfg(test)]

@@ -3,6 +3,8 @@ use std::{
     io::{self, BufRead},
 };
 
+use queues::{IsQueue, Queue};
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct Point {
     x: i32,
@@ -36,20 +38,62 @@ impl Point {
 
 struct Model {
     pixels: HashSet<Point>,
+    exterior: HashSet<Point>,
 }
 
 impl Model {
     fn from_pixels(pixels: &[Point]) -> Model {
-        return Model {
+        Model {
             pixels: HashSet::from_iter(pixels.iter().copied()),
-        };
+            exterior: Model::calculate_exterior(pixels),
+        }
     }
 
     fn neighbor_count(&self, p: Point) -> u32 {
         p.neighbors()
             .iter()
-            .filter(|n| !self.pixels.contains(n))
+            .filter(|n| self.exterior.contains(n))
             .count() as u32
+    }
+
+    fn calculate_exterior(pixels: &[Point]) -> HashSet<Point> {
+        let xlo = pixels.iter().map(|p| p.x).min().unwrap() - 1;
+        let ylo = pixels.iter().map(|p| p.y).min().unwrap() - 1;
+        let zlo = pixels.iter().map(|p| p.z).min().unwrap() - 1;
+        let xhi = pixels.iter().map(|p| p.x).max().unwrap() + 1;
+        let yhi = pixels.iter().map(|p| p.y).max().unwrap() + 1;
+        let zhi = pixels.iter().map(|p| p.z).max().unwrap() + 1;
+
+        let mut exterior = HashSet::<Point>::new();
+        let mut q: Queue<Point> = Queue::new();
+        for (x, y, z) in [
+            (xlo, ylo, zlo),
+            (xhi, ylo, zlo),
+            (xlo, yhi, zlo),
+            (xlo, ylo, zhi),
+            (xhi, yhi, zlo),
+            (xhi, ylo, zhi),
+            (xlo, yhi, zhi),
+            (xhi, yhi, zhi),
+        ] {
+            let p = Point { x, y, z };
+            exterior.insert(p);
+            q.add(p).unwrap();
+        }
+
+        while let Ok(p) = q.remove() {
+            for n in p.neighbors() {
+                if n.x < xlo || n.x > xhi || n.y < ylo || n.y > yhi || n.z < zlo || n.z > zhi {
+                    continue;
+                }
+                if !pixels.contains(&n) && !exterior.contains(&n) {
+                    exterior.insert(n);
+                    q.add(n).unwrap();
+                }
+            }
+        }
+
+        exterior
     }
 
     fn calculate_surface_area(&self) -> u32 {
@@ -57,7 +101,7 @@ impl Model {
     }
 }
 
-pub fn main() {
+pub fn main() -> u32 {
     let stdin = io::stdin();
 
     let mut lines = Vec::new();
@@ -72,9 +116,7 @@ pub fn main() {
         lines.push(line);
     }
 
-    let area = run_program(lines);
-
-    println!("{}", area);
+    run_program(lines)
 }
 
 fn run_program(lines: Vec<String>) -> u32 {
@@ -136,7 +178,7 @@ mod tests {
             .map(|s| s.to_string())
             .collect();
 
-        assert_eq!(run_program(lines), 64);
+        assert_eq!(run_program(lines), 58);
     }
 
     #[test]
@@ -146,6 +188,6 @@ mod tests {
             .map(|s| s.to_string())
             .collect();
 
-        assert_eq!(run_program(lines), 3564);
+        assert_eq!(run_program(lines), 2106);
     }
 }

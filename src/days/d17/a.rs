@@ -3,15 +3,6 @@ use std::{
     io::{self, BufRead},
 };
 
-pub fn main() {
-    println!("Hello, world!");
-
-    let lines = read_input();
-    let result = find_tower_height(lines, 2022);
-
-    println!("{}", result);
-}
-
 struct RepeatingSequence<T> {
     items: Vec<T>,
     index: usize,
@@ -200,12 +191,12 @@ impl Display for Board {
     }
 }
 
-fn read_input() -> String {
+pub fn read_input() -> String {
     let stdin = io::stdin();
     stdin.lock().lines().next().unwrap().unwrap()
 }
 
-fn find_tower_height(input: String, iterations: u32) -> usize {
+pub fn find_tower_height(input: String, iterations: u32) -> usize {
     let wind = RepeatingSequence::new(parse_wind_list(input).unwrap());
 
     let mut shapes = RepeatingSequence::new(vec![

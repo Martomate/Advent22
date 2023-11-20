@@ -157,7 +157,7 @@ fn parse_input(input: &str) -> HashMap<&str, ParsedOp> {
     named_ops
 }
 
-fn run_program(part2: bool, big: bool) -> i64 {
+pub fn run_program(part2: bool, big: bool) -> i64 {
     let input = load_example(big);
     let mut ops_map = parse_input(input);
     if part2 {
@@ -189,15 +189,11 @@ fn load_example(big: bool) -> &'static str {
     }
 }
 
-fn main() {
-    println!("Result: {}", run_program(false, false));
-}
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
 
-    use crate::{parse_input, ParsedOp, run_program};
+    use super::{parse_input, ParsedOp, run_program};
 
     #[test]
     fn parse_input_works_for_single_lines() {

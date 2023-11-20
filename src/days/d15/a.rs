@@ -49,7 +49,7 @@ fn parse_line(line: String) -> SensorReading {
     }
 }
 
-fn main() {
+pub fn main() {
     let mut readings: Vec<SensorReading> = Vec::new();
 
     for l in io::stdin().lock().lines() {
@@ -75,7 +75,7 @@ fn main() {
 
     println!("{}, {}", x_min, x_max);
 
-    let y = 2000000;
+    let y = if readings.len() > 14 { 2000000 } else { 10 };
 
     let mut count = 0;
     for x in x_min..=x_max {
