@@ -89,7 +89,7 @@ fn parse_node(line: &mut Chars) -> (Option<Node>, Option<char>) {
     (None, None)
 }
 
-fn main() {
+pub fn main() {
     println!("Hello, world!");
 
     let mut nodes: Vec<Node> = Vec::new();

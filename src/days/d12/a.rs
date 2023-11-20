@@ -78,7 +78,7 @@ fn find_optimal_route_len(grid: Vec<Vec<u8>>, start: Pos, end: Pos) -> Option<u3
     }
 }
 
-fn main() {
+pub fn main() {
     println!("Hello, world!");
 
     let mut grid: Vec<Vec<u8>> = Vec::new();

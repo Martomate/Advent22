@@ -60,7 +60,7 @@ fn run_program(program: &Vec<Instr>) -> Crt {
     make_crt(x_history)
 }
 
-fn main() {
+pub fn main() {
     println!("Hello, world!");
 
     let mut program: Vec<Instr> = Vec::new();

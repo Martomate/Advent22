@@ -116,7 +116,7 @@ impl Display for Cave {
     }
 }
 
-fn main() {
+pub fn main() {
     let mut cave = Cave::new();
 
     for l in io::stdin().lock().lines() {

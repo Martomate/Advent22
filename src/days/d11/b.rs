@@ -96,7 +96,7 @@ fn simulate_monkey_round(monkeys: &mut Vec<Monkey>, total_mod: i64) {
     }
 }
 
-fn main() {
+pub fn main() {
     println!("Hello, world!");
 
     let mut last_monkey_lines: Vec<String> = Vec::new();
@@ -116,6 +116,10 @@ fn main() {
         } else {
             last_monkey_lines.push(line);
         }
+    }
+
+    if !last_monkey_lines.is_empty() {
+        monkeys.push(parse_monkey(&last_monkey_lines));
     }
 
     let mut total_mod: i32 = 1;

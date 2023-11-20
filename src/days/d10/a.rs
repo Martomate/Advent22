@@ -32,7 +32,7 @@ fn run_program(program: &Vec<Instr>) -> i32 {
     result
 }
 
-fn main() {
+pub fn main() {
     println!("Hello, world!");
 
     let mut program: Vec<Instr> = Vec::new();

@@ -87,7 +87,7 @@ fn parse_node(line: &mut Chars) -> (Option<Node>, Option<char>) {
     (None, None)
 }
 
-fn main() {
+pub fn main() {
     println!("Hello, world!");
 
     let mut pairs: Vec<(Node, Node)> = Vec::new();
@@ -110,6 +110,12 @@ fn main() {
         } else {
             nodes.push(l);
         }
+    }
+
+    if nodes.len() > 1 {
+        let ln = parse_node(&mut nodes[0].chars()).0.unwrap();
+        let rn = parse_node(&mut nodes[1].chars()).0.unwrap();
+        pairs.push((ln, rn));
     }
 
     let mut total = 0;
