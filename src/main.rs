@@ -60,7 +60,8 @@ fn main() {
         20 => c.run(d20::Day),
         21 => c.run(d21::Day),
         22 => c.run(d22::Day),
-        23..=25 => unimplemented!(),
+        23 => c.run(d23::Day),
+        24..=25 => unimplemented!(),
         _ => println!("Not a valid day")
     };
 }
