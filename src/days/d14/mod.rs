@@ -1,10 +1,16 @@
 mod a;
 mod b;
 
-pub fn run(part1: bool) {
-    if part1 {
-        a::main();
-    } else {
-        b::main();
+pub struct Day;
+
+impl super::Runner for Day {
+    type T = usize;
+
+    fn run(input: &str, basic: bool) -> Self::T {
+        if basic {
+            a::main(input)
+        } else {
+            b::main(input)
+        }
     }
 }

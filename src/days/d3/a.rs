@@ -1,13 +1,9 @@
-use std::io::{self, BufRead};
-
-pub fn main() {
+pub fn main(input: &str) -> usize{
     println!("Hello, world!");
 
     let mut total = 0;
 
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-        let l = line.unwrap();
+    for l in input.lines() {
         let first = &l[..(l.len() / 2)];
         let second = &l[(l.len() / 2)..];
 
@@ -40,5 +36,5 @@ pub fn main() {
         total += dup_idx + 1;
     }
 
-    println!("{}", total);
+    total
 }

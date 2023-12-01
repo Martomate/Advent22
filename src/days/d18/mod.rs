@@ -1,11 +1,16 @@
 mod a;
 mod b;
 
-pub fn run_program(part2: bool) {
-    let result = if part2 {
-        b::main()
-    } else {
-        a::main()
-    };
-    println!("{}", result);
+pub struct Day;
+
+impl super::Runner for Day {
+    type T = u32;
+
+    fn run(input: &str, basic: bool) -> Self::T {
+        if basic {
+            a::main(input)
+        } else {
+            b::main(input)
+        }
+    }
 }

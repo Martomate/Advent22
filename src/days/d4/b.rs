@@ -1,5 +1,3 @@
-use std::io::{self, BufRead};
-
 struct Section {
     from: i32,
     to: i32,
@@ -31,18 +29,15 @@ fn parse_sections(s: &str) -> Option<(Section, Section)> {
     }
 }
 
-pub fn main() {
+pub fn main(input: &str) -> usize {
     println!("Hello, world!");
 
-    let stdin = io::stdin();
-    let c = stdin
-        .lock()
+    let c = input
         .lines()
-        .map(|l| l.unwrap())
         .take_while(|l| !l.is_empty())
-        .filter_map(|l| parse_sections(&l))
+        .filter_map(parse_sections)
         .filter(|(l, r)| l.overlaps(r))
         .count();
 
-    println!("{}", c)
+    c
 }

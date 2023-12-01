@@ -1,7 +1,6 @@
 use std::{
     collections::HashSet,
     fmt::Display,
-    io::{self, BufRead},
 };
 
 struct Cave {
@@ -100,12 +99,10 @@ impl Display for Cave {
     }
 }
 
-pub fn main() {
+pub fn main(input: &str) -> usize {
     let mut cave = Cave::new();
 
-    for l in io::stdin().lock().lines() {
-        let line = l.unwrap();
-
+    for line in input.lines() {
         if line.is_empty() {
             break;
         }
@@ -145,11 +142,5 @@ pub fn main() {
     println!();
 
     cave.simulate(500, 0);
-    let sand_count = cave.sand.len();
-
-    println!();
-    println!("{}", cave);
-
-    println!();
-    println!("Sand: {}", sand_count);
+    cave.sand.len()
 }

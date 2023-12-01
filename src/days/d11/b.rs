@@ -1,5 +1,4 @@
 use num::integer::lcm;
-use std::io::{self, BufRead};
 
 #[derive(Clone, Copy)]
 enum RightOperand {
@@ -96,16 +95,14 @@ fn simulate_monkey_round(monkeys: &mut Vec<Monkey>, total_mod: i64) {
     }
 }
 
-pub fn main() {
+pub fn main(input: &str) -> u64 {
     println!("Hello, world!");
 
     let mut last_monkey_lines: Vec<String> = Vec::new();
 
     let mut monkeys: Vec<Monkey> = Vec::new();
 
-    let stdin = io::stdin();
-    for l in stdin.lock().lines() {
-        let line = l.unwrap();
+    for line in input.lines() {
         if line.is_empty() {
             if last_monkey_lines.is_empty() {
                 break;
@@ -114,7 +111,7 @@ pub fn main() {
                 last_monkey_lines.clear();
             }
         } else {
-            last_monkey_lines.push(line);
+            last_monkey_lines.push(line.to_string());
         }
     }
 
@@ -138,7 +135,5 @@ pub fn main() {
     let next_busiest = monkeys[monkeys.len() - 2].inspections;
     let busiest = monkeys[monkeys.len() - 1].inspections;
 
-    let result = next_busiest as u64 * busiest as u64;
-
-    println!("{}", result);
+    next_busiest as u64 * busiest as u64
 }

@@ -1,7 +1,4 @@
-use std::{
-    collections::VecDeque,
-    io::{self, BufRead},
-};
+use std::collections::VecDeque;
 
 struct Ship {
     stacks: Vec<VecDeque<char>>,
@@ -27,7 +24,7 @@ impl Ship {
     }
 }
 
-fn parse_ship(lines: Vec<String>) -> Ship {
+fn parse_ship(lines: &[&str]) -> Ship {
     let mut stacks: Vec<VecDeque<char>> = Vec::new();
     for line in lines.iter().rev() {
         if !line.starts_with(" 1") {
@@ -46,7 +43,7 @@ fn parse_ship(lines: Vec<String>) -> Ship {
     Ship { stacks }
 }
 
-fn parse_move_instr(line: String) -> Option<MoveInstr> {
+fn parse_move_instr(line: &str) -> Option<MoveInstr> {
     let parts: Vec<_> = line.split(' ').collect();
     match (
         parts[1].parse::<u32>().ok(),
@@ -62,23 +59,19 @@ fn parse_move_instr(line: String) -> Option<MoveInstr> {
     }
 }
 
-pub fn main() {
+pub fn main(input: &str) -> String {
     println!("Hello, world!");
 
-    let stdin = io::stdin();
-    let initial_ship_lines: Vec<_> = stdin
-        .lock()
+    let initial_ship_lines: Vec<_> = input
         .lines()
-        .map(|l| l.unwrap())
         .take_while(|l| !l.is_empty())
         .collect();
 
-    let mut ship = parse_ship(initial_ship_lines);
+    let mut ship = parse_ship(&initial_ship_lines);
 
-    for line in stdin
-        .lock()
+    for line in input
         .lines()
-        .map(|l| l.unwrap())
+        .skip(initial_ship_lines.len())
         .take_while(|l| !l.is_empty())
     {
         let instr = parse_move_instr(line).unwrap();
@@ -91,5 +84,5 @@ pub fn main() {
         .map(|s| s.back().unwrap())
         .collect::<String>();
 
-    println!("{}", result)
+    result
 }

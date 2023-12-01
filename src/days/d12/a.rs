@@ -1,8 +1,5 @@
 use bit_set::BitSet;
-use std::{
-    collections::VecDeque,
-    io::{self, BufRead},
-};
+use std::collections::VecDeque;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct Pos {
@@ -78,16 +75,14 @@ fn find_optimal_route_len(grid: Vec<Vec<u8>>, start: Pos, end: Pos) -> Option<u3
     }
 }
 
-pub fn main() {
+pub fn main(input: &str) -> u32 {
     println!("Hello, world!");
 
     let mut grid: Vec<Vec<u8>> = Vec::new();
     let mut start: Option<Pos> = None;
     let mut end: Option<Pos> = None;
 
-    let stdin = io::stdin();
-    for l in stdin.lock().lines() {
-        let line = l.unwrap();
+    for line in input.lines() {
         if line.is_empty() {
             break;
         }
@@ -118,7 +113,5 @@ pub fn main() {
         );
     }
 
-    let result = find_optimal_route_len(grid, start.unwrap(), end.unwrap()).unwrap();
-
-    println!("{}", result);
+    find_optimal_route_len(grid, start.unwrap(), end.unwrap()).unwrap()
 }

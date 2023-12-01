@@ -1,7 +1,6 @@
 use std::{
     cmp::Ordering,
     fmt::Display,
-    io::{self, BufRead},
     iter::zip,
     str::Chars,
 };
@@ -89,17 +88,14 @@ fn parse_node(line: &mut Chars) -> (Option<Node>, Option<char>) {
     (None, None)
 }
 
-pub fn main() {
+pub fn main(input: &str) -> usize {
     println!("Hello, world!");
 
     let mut nodes: Vec<Node> = Vec::new();
 
     let mut last_line_empty = true;
 
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-        let l = line.unwrap();
-
+    for l in input.lines() {
         if l.is_empty() {
             if last_line_empty {
                 break;
@@ -129,7 +125,5 @@ pub fn main() {
         }
     }
 
-    println!("2: {}", idx2);
-    println!("6: {}", idx6);
-    println!("res: {}", (idx2 + 1) * (idx6 + 1));
+    (idx2 + 1) * (idx6 + 1)
 }

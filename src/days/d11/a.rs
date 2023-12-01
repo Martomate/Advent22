@@ -1,5 +1,3 @@
-use std::io::{self, BufRead};
-
 enum RightOperand {
     Num(i32),
     Old,
@@ -93,16 +91,14 @@ fn simulate_monkey_round(monkeys: &mut Vec<Monkey>) {
     }
 }
 
-pub fn main() {
+pub fn main(input: &str) -> u64 {
     println!("Hello, world!");
 
     let mut last_monkey_lines: Vec<String> = Vec::new();
 
     let mut monkeys: Vec<Monkey> = Vec::new();
 
-    let stdin = io::stdin();
-    for l in stdin.lock().lines() {
-        let line = l.unwrap();
+    for line in input.lines() {
         if line.is_empty() {
             if last_monkey_lines.is_empty() {
                 break;
@@ -111,7 +107,7 @@ pub fn main() {
                 last_monkey_lines.clear();
             }
         } else {
-            last_monkey_lines.push(line);
+            last_monkey_lines.push(line.to_string());
         }
     }
 
@@ -125,7 +121,5 @@ pub fn main() {
 
     monkeys.sort_by(|l, r| l.inspections.cmp(&r.inspections));
 
-    let result = monkeys[monkeys.len() - 2].inspections * monkeys[monkeys.len() - 1].inspections;
-
-    println!("{}", result);
+    monkeys[monkeys.len() - 2].inspections as u64 * monkeys[monkeys.len() - 1].inspections as u64
 }

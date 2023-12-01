@@ -1,5 +1,3 @@
-use std::io::{self, BufRead};
-
 fn visible_trees(grid: &[Vec<i8>], tx: usize, ty: usize, dx: i32, dy: i32) -> u32 {
     let h = grid.len() as i32;
     let w = grid[0].len() as i32;
@@ -32,14 +30,12 @@ fn scenic_score(grid: &[Vec<i8>], tx: usize, ty: usize) -> u32 {
         * visible_trees(grid, tx, ty, 0, -1)
 }
 
-pub fn main() {
+pub fn main(input: &str) -> u32 {
     println!("Hello, world!");
 
     let mut grid: Vec<Vec<i8>> = Vec::new();
 
-    let stdin = io::stdin();
-    for l in stdin.lock().lines() {
-        let line = l.unwrap();
+    for line in input.lines() {
         if line.is_empty() {
             break;
         }
@@ -61,5 +57,5 @@ pub fn main() {
         }
     }
 
-    println!("{}", max_score);
+    max_score
 }

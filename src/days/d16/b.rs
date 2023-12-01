@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    io::{self, BufRead},
-};
+use std::collections::HashMap;
 
 use bit_set::BitSet;
 
@@ -247,15 +244,13 @@ pub fn find_max_volume_for_input(input: Vec<String>) -> u32 {
     )
 }
 
-pub fn read_input() -> Vec<String> {
-    let stdin = io::stdin();
+pub fn read_input(input: &str) -> Vec<String> {
     let mut lines: Vec<String> = Vec::new();
-    for l in stdin.lock().lines() {
-        let line = l.unwrap();
+    for line in input.lines() {
         if line.is_empty() {
             break;
         }
-        lines.push(line);
+        lines.push(line.to_string());
     }
     lines
 }

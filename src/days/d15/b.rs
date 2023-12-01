@@ -1,5 +1,3 @@
-use std::io::{self, BufRead};
-
 #[derive(Clone, Copy)]
 struct Point {
     x: i32,
@@ -30,7 +28,7 @@ fn parse_point(s: &str) -> Option<Point> {
     })
 }
 
-fn parse_line(line: String) -> SensorReading {
+fn parse_line(line: &str) -> SensorReading {
     match line[10..].split_once(": closest beacon is at ") {
         Some((sensor_str, beacon_str)) => SensorReading {
             sensor: parse_point(sensor_str).unwrap(),
@@ -69,12 +67,10 @@ fn find_hole(readings: &[SensorReading], search_width: i32) -> Option<Point> {
     None
 }
 
-pub fn main() {
+pub fn main(input: &str) -> i64 {
     let mut readings: Vec<SensorReading> = Vec::new();
 
-    for l in io::stdin().lock().lines() {
-        let line = l.unwrap();
-
+    for line in input.lines() {
         if line.is_empty() {
             break;
         }
@@ -84,6 +80,5 @@ pub fn main() {
 
     let hole = find_hole(&readings, if readings.len() > 14 { 4000000 } else { 20 }).unwrap();
 
-    println!("Hole: {}, {}", hole.x, hole.y);
-    println!("Value: {}", hole.x as i64 * 4000000 + hole.y as i64);
+    hole.x as i64 * 4000000 + hole.y as i64
 }

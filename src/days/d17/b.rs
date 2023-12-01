@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
     fmt::Display,
-    io::{self, BufRead},
 };
 
 struct RepeatingSequence<T> {
@@ -262,9 +261,8 @@ impl Display for Board {
     }
 }
 
-pub fn read_input() -> String {
-    let stdin = io::stdin();
-    stdin.lock().lines().next().unwrap().unwrap()
+pub fn read_input(input: &str) -> String {
+    input.lines().next().unwrap().to_string()
 }
 
 pub fn find_tower_height(input: String, iterations: u64) -> u64 {

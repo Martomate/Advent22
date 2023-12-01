@@ -255,9 +255,10 @@ fn parse_input(input: &[&str], cube: bool) -> (Board, Vec<Instruction>) {
     (board, instructions)
 }
 
-pub fn run_program(input: Vec<&str>, cube: bool) -> u32 {
-    let start_x = input[0].find(|c| c == '.').unwrap();
-    let (board, instructions) = parse_input(&input, cube);
+pub fn run_program(input: &str, cube: bool) -> u32 {
+    let lines: Vec<_> = input.lines().collect();
+    let start_x = lines[0].find(|c| c == '.').unwrap();
+    let (board, instructions) = parse_input(&lines, cube);
 
     let start_pos = Player::new(start_x as i32, 0, Direction::Right);
     let end_pos = board.walk(start_pos, instructions);
@@ -265,9 +266,22 @@ pub fn run_program(input: Vec<&str>, cube: bool) -> u32 {
     score(end_pos)
 }
 
+pub struct Day;
+
+impl super::Runner for Day {
+    type T = u32;
+    
+    fn run(input: &str, basic: bool) -> Self::T {
+        run_program(input, !basic)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const EXAMPLE_1: &str = include_str!("ex1.txt");
+    const EXAMPLE_2: &str = include_str!("ex2.txt");
 
     #[test]
     fn score_uses_1_indexing() {
@@ -314,33 +328,21 @@ mod tests {
 
     #[test]
     fn small_example_should_work_part_1() {
-        assert_eq!(
-            run_program(include_str!("ex1.txt").split('\n').collect(), false),
-            6032
-        );
+        assert_eq!(run_program(EXAMPLE_1, false), 6032);
     }
 
     #[test]
     fn big_example_should_work_part_1() {
-        assert_eq!(
-            run_program(include_str!("ex2.txt").split('\n').collect(), false),
-            117102
-        );
+        assert_eq!(run_program(EXAMPLE_2, false), 117102);
     }
 
     #[test]
     fn small_example_should_work_part_2() {
-        assert_eq!(
-            run_program(include_str!("ex1.txt").split('\n').collect(), true),
-            5031
-        );
+        assert_eq!(run_program(EXAMPLE_1, true), 5031);
     }
 
     #[test]
     fn big_example_should_work_part_2() {
-        assert_eq!(
-            run_program(include_str!("ex2.txt").split('\n').collect(), true),
-            135297
-        );
+        assert_eq!(run_program(EXAMPLE_2, true), 135297);
     }
 }

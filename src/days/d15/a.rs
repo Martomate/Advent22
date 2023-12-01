@@ -1,5 +1,3 @@
-use std::io::{self, BufRead};
-
 #[derive(Clone, Copy)]
 struct Point {
     x: i32,
@@ -39,7 +37,7 @@ fn parse_point(s: &str) -> Option<Point> {
     })
 }
 
-fn parse_line(line: String) -> SensorReading {
+fn parse_line(line: &str) -> SensorReading {
     match line[10..].split_once(": closest beacon is at ") {
         Some((sensor_str, beacon_str)) => SensorReading {
             sensor: parse_point(sensor_str).unwrap(),
@@ -49,12 +47,10 @@ fn parse_line(line: String) -> SensorReading {
     }
 }
 
-pub fn main() {
+pub fn main(input: &str) -> i64 {
     let mut readings: Vec<SensorReading> = Vec::new();
 
-    for l in io::stdin().lock().lines() {
-        let line = l.unwrap();
-
+    for line in input.lines() {
         if line.is_empty() {
             break;
         }
@@ -89,5 +85,5 @@ pub fn main() {
         }
     }
 
-    println!("Count: {}", count)
+    count as i64
 }

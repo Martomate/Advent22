@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 pub mod d1;
 pub mod d2;
 pub mod d3;
@@ -20,3 +22,9 @@ pub mod d19;
 pub mod d20;
 pub mod d21;
 pub mod d22;
+
+pub trait Runner {
+    type T: Display;
+
+    fn run(input: &str, basic: bool) -> Self::T;
+}

@@ -157,8 +157,7 @@ fn parse_input(input: &str) -> HashMap<&str, ParsedOp> {
     named_ops
 }
 
-pub fn run_program(part2: bool, big: bool) -> i64 {
-    let input = load_example(big);
+pub fn run_program(input: &str, part2: bool) -> i64 {
     let mut ops_map = parse_input(input);
     if part2 {
         ops_map.insert("humn", ParsedOp::Human);
@@ -181,11 +180,13 @@ pub fn run_program(part2: bool, big: bool) -> i64 {
     }
 }
 
-fn load_example(big: bool) -> &'static str {
-    if big {
-        include_str!("ex2.txt")
-    } else {
-        include_str!("ex1.txt")
+pub struct Day;
+
+impl super::Runner for Day {
+    type T = i64;
+    
+    fn run(input: &str, basic: bool) -> Self::T {
+        run_program(input, !basic)
     }
 }
 
@@ -195,6 +196,14 @@ mod tests {
 
     use super::{parse_input, ParsedOp, run_program};
 
+    fn load_example(big: bool) -> &'static str {
+        if big {
+            include_str!("ex2.txt")
+        } else {
+            include_str!("ex1.txt")
+        }
+    }
+    
     #[test]
     fn parse_input_works_for_single_lines() {
         assert_eq!(parse_input("root: 123"), HashMap::from([("root", ParsedOp::Const(123))]));
@@ -215,21 +224,21 @@ mod tests {
 
     #[test]
     fn small_example_works_for_part_1() {
-        assert_eq!(run_program(false, false), 152);
+        assert_eq!(run_program(load_example(false), false), 152);
     }
 
     #[test]
     fn big_example_works_for_part_1() {
-        assert_eq!(run_program(false, true), 194501589693264);
+        assert_eq!(run_program(load_example(true), false), 194501589693264);
     }
 
     #[test]
     fn small_example_works_for_part_2() {
-        assert_eq!(run_program(true, false), 301);
+        assert_eq!(run_program(load_example(false), true), 301);
     }
 
     #[test]
     fn big_example_works_for_part_2() {
-        assert_eq!(run_program(true, true), 3887609741189);
+        assert_eq!(run_program(load_example(true), true), 3887609741189);
     }
 }

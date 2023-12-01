@@ -1,13 +1,9 @@
-use std::io::{self, BufRead};
-
-pub fn main() {
+pub fn main(input: &str) -> u32 {
     println!("Hello, world!");
 
     let mut grid: Vec<Vec<i8>> = Vec::new();
 
-    let stdin = io::stdin();
-    for l in stdin.lock().lines() {
-        let line = l.unwrap();
+    for line in input.lines() {
         if line.is_empty() {
             break;
         }
@@ -69,5 +65,5 @@ pub fn main() {
         }
     }
 
-    println!("{}", count);
+    count
 }

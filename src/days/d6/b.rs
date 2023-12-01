@@ -1,12 +1,9 @@
 use std::collections::HashSet;
-use std::io::{self, BufRead};
 
-pub fn main() {
+pub fn main(input: &str) -> usize {
     println!("Hello, world!");
 
-    let stdin = io::stdin();
-    let mut line = String::new();
-    stdin.lock().read_line(&mut line).unwrap();
+    let line = input.lines().next().unwrap();
 
     let mut result = 0;
 
@@ -21,5 +18,5 @@ pub fn main() {
         }
     }
 
-    println!("{}", result);
+    result
 }

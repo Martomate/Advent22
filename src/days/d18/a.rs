@@ -1,7 +1,4 @@
-use std::{
-    collections::HashSet,
-    io::{self, BufRead},
-};
+use std::collections::HashSet;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct Point {
@@ -57,19 +54,15 @@ impl Model {
     }
 }
 
-pub fn main() -> u32 {
-    let stdin = io::stdin();
-
+pub fn main(input: &str) -> u32 {
     let mut lines = Vec::new();
 
-    for l in stdin.lock().lines() {
-        let line = l.unwrap();
-
+    for line in input.lines() {
         if line.is_empty() {
             break;
         }
 
-        lines.push(line);
+        lines.push(line.to_string());
     }
 
     run_program(lines)

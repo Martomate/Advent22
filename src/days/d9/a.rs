@@ -1,7 +1,4 @@
-use std::{
-    collections::HashSet,
-    io::{self, BufRead},
-};
+use std::collections::HashSet;
 
 enum Dir {
     Up,
@@ -21,14 +18,12 @@ struct Pos {
     y: i32,
 }
 
-pub fn main() {
+pub fn main(input: &str) -> usize {
     println!("Hello, world!");
 
     let mut motions: Vec<Motion> = Vec::new();
 
-    let stdin = io::stdin();
-    for l in stdin.lock().lines() {
-        let line = l.unwrap();
+    for line in input.lines() {
         if line.is_empty() {
             break;
         }
@@ -98,7 +93,5 @@ pub fn main() {
         unique_tail_positions.insert(pos);
     }
 
-    let result = unique_tail_positions.len();
-
-    println!("{}", result);
+    unique_tail_positions.len()
 }

@@ -1,7 +1,6 @@
 use std::{
     collections::{HashMap, VecDeque},
     fmt::{self},
-    io::{self, BufRead},
 };
 
 enum Command {
@@ -194,19 +193,17 @@ fn make_executed_command(cmd: &Command, output: &[Vec<String>]) -> ExecutedComma
     }
 }
 
-fn parse_input() -> Vec<ExecutedCommand> {
+fn parse_input(input: &str) -> Vec<ExecutedCommand> {
     let mut commands: Vec<ExecutedCommand> = Vec::new();
     let mut last_cmd: Option<Command> = None;
     let mut last_output: Vec<Vec<String>> = Vec::new();
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-        let l = line.unwrap();
 
+    for l in input.lines() {
         if l.is_empty() {
             break;
         }
 
-        match parse_line(&l) {
+        match parse_line(l) {
             Some(p) => match p {
                 ParsedLine::Cmd(new_cmd) => {
                     match &last_cmd {
@@ -228,10 +225,10 @@ fn parse_input() -> Vec<ExecutedCommand> {
     commands
 }
 
-pub fn main() {
+pub fn main(input: &str) -> i32 {
     println!("Hello, world!");
 
-    let commands = parse_input();
+    let commands = parse_input(input);
 
     let file_system = infer_file_system(commands);
     let root = DirectoryData {
@@ -246,5 +243,5 @@ pub fn main() {
     dir_sizes.sort();
     let result = dir_sizes.iter().find(|size| **size >= overflow).unwrap();
 
-    println!("{}", *result);
+    *result
 }

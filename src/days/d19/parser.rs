@@ -8,7 +8,7 @@ pub enum BlueprintParseError {
     MissingRecipe(Resource),
 }
 
-pub fn parse_blueprints(lines: Vec<String>) -> Result<Vec<Blueprint>, BlueprintParseError> {
+pub fn parse_blueprints(lines: &[&str]) -> Result<Vec<Blueprint>, BlueprintParseError> {
     let mut blueprints: Vec<Blueprint> = Vec::new();
 
     for pieces in lines
@@ -82,9 +82,9 @@ mod tests {
 
     #[test]
     fn parse_blueprints_on_single_lines() {
-        let blueprints = parse_blueprints(vec![
-            "Blueprint 1: Each ore robot costs 3 ore. Each clay robot costs 3 ore. Each obsidian robot costs 2 ore and 20 clay. Each geode robot costs 2 ore and 20 obsidian.".to_owned(),
-            "Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 2 ore and 20 clay. Each geode robot costs 2 ore and 20 obsidian.".to_owned()
+        let blueprints = parse_blueprints(&[
+            "Blueprint 1: Each ore robot costs 3 ore. Each clay robot costs 3 ore. Each obsidian robot costs 2 ore and 20 clay. Each geode robot costs 2 ore and 20 obsidian.",
+            "Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 2 ore and 20 clay. Each geode robot costs 2 ore and 20 obsidian."
         ]);
 
         assert_eq!(
@@ -114,8 +114,7 @@ mod tests {
 
     #[test]
     fn parse_blueprints_on_separate_lines() {
-        let blueprints = parse_blueprints(
-            "
+        let input = "
 Blueprint 1:
   Each ore robot costs 4 ore.
   Each clay robot costs 2 ore.
@@ -127,11 +126,10 @@ Blueprint 2:
   Each clay robot costs 3 ore.
   Each obsidian robot costs 3 ore and 8 clay.
   Each geode robot costs 3 ore and 12 obsidian.
-"
-            .split('\n')
-            .map(|s| s.to_owned())
-            .collect(),
-        );
+";
+        let lines: Vec<_> = input.split('\n').collect();
+
+        let blueprints = parse_blueprints(&lines,);
 
         assert_eq!(
             blueprints,

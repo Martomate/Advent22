@@ -1,14 +1,10 @@
-use std::io::{self, BufRead};
-
-pub fn main() {
+pub fn main(input: &str) -> i32 {
     println!("Hello, world!");
 
     let mut latest: i32 = 0;
     let mut max: i32 = 0;
 
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-        let l = line.unwrap();
+    for l in input.lines() {
         if !l.is_empty() {
             let c = l.parse::<i32>().unwrap();
             latest += c;
@@ -23,5 +19,5 @@ pub fn main() {
         max = latest;
     }
 
-    println!("{}", max);
+    max
 }

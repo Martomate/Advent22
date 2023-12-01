@@ -1,5 +1,3 @@
-use std::io::{self, BufRead};
-
 #[derive(PartialEq, Eq, Copy, Clone)]
 enum Piece {
     Rock,
@@ -13,14 +11,12 @@ enum Outcome {
     Draw,
 }
 
-pub fn main() {
+pub fn main(input: &str) -> i32 {
     println!("Hello, world!");
 
     let mut total = 0;
 
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-        let l = line.unwrap();
+    for l in input.lines() {
         let parts: Vec<&str> = l.split_ascii_whitespace().collect();
         let first = parts[0];
         let second = parts[1];
@@ -64,5 +60,5 @@ pub fn main() {
         };
     }
 
-    println!("{}", total);
+    total
 }

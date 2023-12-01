@@ -1,7 +1,4 @@
-use std::{
-    fmt::Display,
-    io::{self, BufRead},
-};
+use std::fmt::Display;
 
 struct RepeatingSequence<T> {
     items: Vec<T>,
@@ -191,9 +188,8 @@ impl Display for Board {
     }
 }
 
-pub fn read_input() -> String {
-    let stdin = io::stdin();
-    stdin.lock().lines().next().unwrap().unwrap()
+pub fn read_input(input: &str) -> String {
+    input.lines().next().unwrap().to_string()
 }
 
 pub fn find_tower_height(input: String, iterations: u32) -> usize {

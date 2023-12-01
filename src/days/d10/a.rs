@@ -1,5 +1,3 @@
-use std::io::{self, BufRead};
-
 enum Instr {
     Noop,
     Addx(i32),
@@ -32,14 +30,12 @@ fn run_program(program: &Vec<Instr>) -> i32 {
     result
 }
 
-pub fn main() {
+pub fn main(input: &str) -> i32 {
     println!("Hello, world!");
 
     let mut program: Vec<Instr> = Vec::new();
 
-    let stdin = io::stdin();
-    for l in stdin.lock().lines() {
-        let line = l.unwrap();
+    for line in input.lines() {
         if line.is_empty() {
             break;
         }
@@ -56,7 +52,5 @@ pub fn main() {
         }
     }
 
-    let result = run_program(&program);
-
-    println!("{}", result);
+    run_program(&program)
 }

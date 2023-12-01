@@ -6,12 +6,7 @@ fn parse_input(input: &str) -> Result<Vec<i64>, ParseIntError> {
     input.split('\n').map(|l| l.parse::<i64>()).collect()
 }
 
-const EXAMPLE_1: &str = include_str!("ex1.txt");
-const EXAMPLE_2: &str = include_str!("ex2.txt");
-
-pub fn run_example(big: bool, part2: bool) -> i64 {
-    let input = if big { EXAMPLE_2 } else { EXAMPLE_1 };
-
+pub fn run_example(input: &str, part2: bool) -> i64 {
     let seq = parse_input(input).unwrap();
 
     if part2 {
@@ -21,27 +16,40 @@ pub fn run_example(big: bool, part2: bool) -> i64 {
     }
 }
 
+pub struct Day;
+
+impl super::Runner for Day {
+    type T = i64;
+    
+    fn run(input: &str, basic: bool) -> Self::T {
+        run_example(input, !basic)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    const EXAMPLE_1: &str = include_str!("ex1.txt");
+    const EXAMPLE_2: &str = include_str!("ex2.txt");
+    
     #[test]
     fn part_1_small() {
-        assert_eq!(run_example(false, false), 3);
+        assert_eq!(run_example(EXAMPLE_1, false), 3);
     }
 
     #[test]
     fn part_1_big() {
-        assert_eq!(run_example(true, false), 11037);
+        assert_eq!(run_example(EXAMPLE_2, false), 11037);
     }
 
     #[test]
     fn part_2_small() {
-        assert_eq!(run_example(false, true), 1623178306);
+        assert_eq!(run_example(EXAMPLE_1, true), 1623178306);
     }
 
     #[test]
     fn part_2_big() {
-        assert_eq!(run_example(true, true), 3033720253914);
+        assert_eq!(run_example(EXAMPLE_2, true), 3033720253914);
     }
 }

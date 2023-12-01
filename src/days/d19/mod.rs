@@ -9,9 +9,20 @@ mod parser;
 mod resource;
 mod simulation;
 
+pub struct Day;
+
+impl super::Runner for Day {
+    type T = u32;
+    
+    fn run(input: &str, basic: bool) -> Self::T {
+        let lines: Vec<_> = input.lines().collect();
+        run_program(&lines, if basic { 24 } else { 32 }, !basic)
+    }
+}
+
 const MAX_DEPTH: usize = 32;
 
-pub fn run_program(lines: Vec<String>, steps: u8, perform_sum: bool) -> u32 {
+pub fn run_program(lines: &[&str], steps: u8, perform_sum: bool) -> u32 {
     assert!(
         steps as usize <= MAX_DEPTH,
         "steps may not be more than {}",
@@ -78,7 +89,7 @@ mod tests {
     fn example_works_part_1() {
         let lines = small_example();
 
-        assert_eq!(run_program(lines, 24, true), 33);
+        assert_eq!(run_program(&lines, 24, true), 33);
     }
 
     #[test]
@@ -86,7 +97,7 @@ mod tests {
     fn big_example_works_part_1() {
         let lines = big_example();
 
-        assert_eq!(run_program(lines, 24, true), 1725);
+        assert_eq!(run_program(&lines, 24, true), 1725);
     }
 
     #[test]
@@ -94,20 +105,18 @@ mod tests {
     fn big_example_works_part_2() {
         let lines = big_example();
 
-        assert_eq!(run_program(lines, 32, false), 15510);
+        assert_eq!(run_program(&lines, 32, false), 15510);
     }
 
-    fn small_example() -> Vec<String> {
+    fn small_example() -> Vec<&'static str> {
         include_str!("ex1.txt")
             .split('\n')
-            .map(|s| s.to_owned())
             .collect()
     }
 
-    fn big_example() -> Vec<String> {
+    fn big_example() -> Vec<&'static str> {
         include_str!("ex2.txt")
             .split('\n')
-            .map(|s| s.to_owned())
             .collect()
     }
 }
