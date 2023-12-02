@@ -23,6 +23,7 @@ pub mod d20;
 pub mod d21;
 pub mod d22;
 pub mod d23;
+pub mod d24;
 
 pub trait Runner {
     type T: Display;
