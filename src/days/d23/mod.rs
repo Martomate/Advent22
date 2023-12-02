@@ -7,7 +7,7 @@ struct Point {
 }
 
 impl Point {
-    fn new(x: i32, y: i32) -> Self {
+    const fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
 }
@@ -51,12 +51,14 @@ impl From<Vec<Point>> for Board {
     }
 }
 
-fn neighbors(p: Point) -> Vec<Point> {
-    let mut pts = Vec::with_capacity(8);
+fn neighbors(p: Point) -> [Point; 8] {
+    let mut pts = [Point::new(0, 0); 8];
+    let mut index = 0;
     for dy in -1..=1 {
         for dx in -1..=1 {
             if dx != 0 || dy != 0 {
-                pts.push(Point::new(p.x + dx, p.y + dy));
+                pts[index] = Point::new(p.x + dx, p.y + dy);
+                index += 1;
             }
         }
     }
@@ -64,14 +66,13 @@ fn neighbors(p: Point) -> Vec<Point> {
 }
 
 fn dirs_to_check(time: u32, retry: u32) -> [Point; 3] {
-    let i = (time + retry) % 4;
-    match i {
-        0 => [Point::new(1, -1), Point::new(0, -1), Point::new(-1, -1)],
-        1 => [Point::new(-1, 1), Point::new(0, 1), Point::new(1, 1)],
-        2 => [Point::new(-1, 1), Point::new(-1, 0), Point::new(-1, -1)],
-        3 => [Point::new(1, -1), Point::new(1, 0), Point::new(1, 1)],
-        _ => unreachable!(),
-    }
+    static DIRECTIONS_TO_CHECK: [[Point; 3]; 4] = [
+        [Point::new(1, -1), Point::new(0, -1), Point::new(-1, -1)],
+        [Point::new(-1, 1), Point::new(0, 1), Point::new(1, 1)],
+        [Point::new(-1, 1), Point::new(-1, 0), Point::new(-1, -1)],
+        [Point::new(1, -1), Point::new(1, 0), Point::new(1, 1)],
+    ];
+    DIRECTIONS_TO_CHECK[((time + retry) % 4) as usize]
 }
 
 struct Bounds {
